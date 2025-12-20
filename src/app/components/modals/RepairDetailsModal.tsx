@@ -1,8 +1,12 @@
+import { useState } from 'react';
 import { X, Printer, Package } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Repair } from '../../types';
+import { PrintOptionsModal } from './PrintOptionsModal';
+import { printRepairLabel } from '../../utils/printRepairLabel';
+import { printRepairReceipt } from '../../utils/printRepairReceipt';
 
 interface RepairDetailsModalProps {
     isOpen: boolean;
@@ -11,7 +15,21 @@ interface RepairDetailsModalProps {
 }
 
 export function RepairDetailsModal({ isOpen, onClose, repair }: RepairDetailsModalProps) {
+    const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+
     if (!repair) return null;
+
+    const handlePrintClick = () => {
+        setIsPrintModalOpen(true);
+    };
+
+    const handlePrintLabel = () => {
+        if (repair) printRepairLabel(repair);
+    };
+
+    const handlePrintReceipt = () => {
+        if (repair) printRepairReceipt(repair);
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -29,6 +47,12 @@ export function RepairDetailsModal({ isOpen, onClose, repair }: RepairDetailsMod
                         <div>
                             <p className="text-sm text-gray-500">Client</p>
                             <p className="font-semibold text-lg">{repair.clientNom}</p>
+                            {repair.clientTelephone && (
+                                <p className="text-sm text-gray-600">{repair.clientTelephone}</p>
+                            )}
+                            {repair.clientEmail && (
+                                <p className="text-sm text-gray-600">{repair.clientEmail}</p>
+                            )}
                         </div>
                         <div className="text-right">
                             <p className="text-sm text-gray-500">Date</p>
@@ -60,6 +84,16 @@ export function RepairDetailsModal({ isOpen, onClose, repair }: RepairDetailsMod
                             {repair.description || "Aucune description fournie."}
                         </p>
                     </div>
+
+                    {/* Remarque */}
+                    {repair.remarque && (
+                        <div>
+                            <h4 className="font-semibold mb-2 text-amber-700">Remarque (Interne)</h4>
+                            <p className="text-gray-800 bg-amber-50 border border-amber-200 p-3 rounded-md text-sm">
+                                {repair.remarque}
+                            </p>
+                        </div>
+                    )}
 
                     {/* Parts Used */}
                     <div>
@@ -99,14 +133,27 @@ export function RepairDetailsModal({ isOpen, onClose, repair }: RepairDetailsMod
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4">
-                        <Button variant="outline" className="gap-2">
+                        <Button
+                            variant="outline"
+                            className="gap-2"
+                            onClick={handlePrintClick}
+                        >
                             <Printer className="w-4 h-4" />
-                            Imprimer Ticket
+                            Imprimer
                         </Button>
                         <Button onClick={onClose}>
                             Fermer
                         </Button>
                     </div>
+
+                    <PrintOptionsModal
+                        isOpen={isPrintModalOpen}
+                        onClose={() => setIsPrintModalOpen(false)}
+                        onPrintLabel={handlePrintLabel}
+                        onPrintReceipt={handlePrintReceipt}
+                        title="Imprimer"
+                        description="Quel document voulez-vous imprimer ?"
+                    />
 
                 </div>
             </DialogContent>

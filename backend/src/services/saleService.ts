@@ -2,6 +2,7 @@ import pool from '../config/db.js'; // Uses default export with connect/query mo
 
 export interface SaleItem {
     product_id?: number | null;
+    phone_id?: string | null;
     quantity: number;
     unit_price: number;
     is_manual: boolean;
@@ -39,16 +40,23 @@ export const createSale = async (sale: Sale) => {
         // 2. Process Items
         for (const item of items) {
             await client.query(
-                'INSERT INTO sale_items (sale_id, product_id, quantity, unit_price, is_manual, manual_name) VALUES ($1, $2, $3, $4, $5, $6)',
-                [saleId, item.product_id, item.quantity, item.unit_price, item.is_manual ? 1 : 0, item.manual_name]
-                // Note: SQLite boolean is 0/1 usually, wrapper might handle boolean but safer to cast if schema says INTEGER
+                'INSERT INTO sale_items (sale_id, product_id, phone_id, quantity, unit_price, is_manual, manual_name) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+                [saleId, item.product_id, item.phone_id, item.quantity, item.unit_price, item.is_manual ? 1 : 0, item.manual_name]
             );
 
-            // Decrement Inventory if not manual
+            // Decrement Inventory if product
             if (!item.is_manual && item.product_id) {
                 await client.query(
                     'UPDATE products SET stock_quantity = stock_quantity - $1 WHERE id = $2',
                     [item.quantity, item.product_id]
+                );
+            }
+
+            // Update Phone Status if phone
+            if (item.phone_id) {
+                await client.query(
+                    "UPDATE phones SET status = 'sold' WHERE id = $1",
+                    [item.phone_id]
                 );
             }
         }
@@ -89,11 +97,12 @@ export const getAllSales = async () => {
 
     const query = `
         SELECT s.id as sale_id, s.*, 
-               si.product_id, si.quantity, si.unit_price, si.is_manual, si.manual_name,
-               p.name as product_name
+               si.product_id, si.phone_id, si.quantity, si.unit_price, si.is_manual, si.manual_name,
+               p.name as product_name, ph.model as phone_model, ph.brand as phone_brand, ph.imei as phone_imei
         FROM sales s
         LEFT JOIN sale_items si ON s.id = si.sale_id
         LEFT JOIN products p ON si.product_id = p.id
+        LEFT JOIN phones ph ON si.phone_id = ph.id
         ORDER BY s.created_at DESC
     `;
 

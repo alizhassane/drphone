@@ -84,6 +84,7 @@ export function ImprovedPaymentScreen({ onNavigate, shopSettings, transaction }:
         payment_method: paymentMethod,
         items: items.map(item => ({
           product_id: item.type === 'product' && !item.productId.startsWith('manual') && !item.productId.startsWith('repair') ? parseInt(item.productId) : undefined,
+          phone_id: item.type === 'phone' ? item.productId : undefined,
           quantity: item.quantite,
           unit_price: item.prix,
           is_manual: item.type === 'manual' || item.type === 'repair' || item.productId.startsWith('manual'),

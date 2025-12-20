@@ -2,6 +2,7 @@ import api from './api';
 
 export interface SaleItemInput {
     product_id?: number | null;
+    phone_id?: string | null;
     quantity: number;
     unit_price: number;
     is_manual: boolean;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Eye, Edit, CreditCard, Filter } from 'lucide-react';
+import { Plus, Search, Eye, Edit, CreditCard, Filter, Printer, Trash } from 'lucide-react';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -14,7 +14,11 @@ import {
 import type { Repair, Screen, PaymentStatus, RepairStatus } from '../types';
 import * as repairService from '../../services/repairService';
 import { RepairDetailsModal } from '../components/modals/RepairDetailsModal';
-import { EditRepairModal } from '../components/modals/EditRepairModal'; // Import Edit Modal
+import { EditRepairModal } from '../components/modals/EditRepairModal';
+import { ConfirmationModal } from '../components/modals/ConfirmationModal';
+import { PrintOptionsModal } from '../components/modals/PrintOptionsModal';
+import { printRepairLabel } from '../utils/printRepairLabel';
+import { printRepairReceipt } from '../utils/printRepairReceipt';
 
 interface RepairsScreenProps {
   onNavigate: (screen: Screen, repair?: Repair) => void;
@@ -30,7 +34,11 @@ export function RepairsScreen({ onNavigate }: RepairsScreenProps) {
   // Modal State
   const [selectedRepair, setSelectedRepair] = useState<Repair | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false); // Edit Modal State
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [repairToDelete, setRepairToDelete] = useState<Repair | null>(null);
 
   useEffect(() => {
     loadRepairs();
@@ -50,7 +58,9 @@ export function RepairsScreen({ onNavigate }: RepairsScreenProps) {
 
   const getPaymentStatus = (repair: Repair): PaymentStatus => {
     const remaining = (repair.prix || 0) - (repair.depot || 0);
-    if (remaining <= 0 || repair.statut === 'payée_collectée') return 'payé';
+    // If status is 'payée_collectée', consider it paid regardless of calc
+    if (repair.statut === 'payée_collectée') return 'payé';
+    if (remaining <= 0.01) return 'payé'; // Floating point tolerance
     if (repair.depot > 0) return 'partiel';
     return 'non_payé';
   };
@@ -78,6 +88,11 @@ export function RepairsScreen({ onNavigate }: RepairsScreenProps) {
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
+  const statusCounts = repairs.reduce((acc, repair) => {
+    acc[repair.statut] = (acc[repair.statut] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   const handleStatusChange = async (repairId: string, newStatus: RepairStatus) => {
     try {
       await repairService.updateRepairStatus(Number(repairId), newStatus);
@@ -102,90 +117,111 @@ export function RepairsScreen({ onNavigate }: RepairsScreenProps) {
     setIsEditOpen(true);
   };
 
-  const handleEditSave = () => {
-    loadRepairs(); // Refresh list after edit
+  const handleDeleteClick = (repair: Repair) => {
+    setRepairToDelete(repair);
+    setIsDeleteModalOpen(true);
   };
 
-  const statusCounts = {
-    all: repairs.length,
-    reçue: repairs.filter(r => r.statut === 'reçue').length,
-    en_cours: repairs.filter(r => r.statut === 'en_cours').length,
-    en_attente_pieces: repairs.filter(r => r.statut === 'en_attente_pieces').length,
-    réparée: repairs.filter(r => r.statut === 'réparée').length,
-    payée_collectée: repairs.filter(r => r.statut === 'payée_collectée').length,
+  const handleConfirmDelete = async () => {
+    if (!repairToDelete) return;
+    try {
+      await repairService.deleteRepair(Number(repairToDelete.id));
+      setIsDeleteModalOpen(false);
+      setRepairToDelete(null);
+      await loadRepairs();
+    } catch (error) {
+      console.error('Failed to delete repair', error);
+      alert('Erreur lors de la suppression');
+    }
+  };
+
+  const handlePrintClick = (repair: Repair) => {
+    setSelectedRepair(repair);
+    setIsPrintModalOpen(true);
+  };
+
+  const handlePrintLabel = () => {
+    if (selectedRepair) {
+      printRepairLabel(selectedRepair);
+    }
+  };
+
+  const handlePrintReceipt = () => {
+    if (selectedRepair) {
+      printRepairReceipt(selectedRepair);
+    }
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Gestion des réparations</h2>
-          <p className="text-gray-500">Gérez tous vos tickets de réparation</p>
+          <h2 className="text-2xl font-bold text-gray-900">Réparations</h2>
+          <p className="text-gray-500">Gérez les tickets et suivis</p>
         </div>
         <Button
           onClick={() => onNavigate('new-repair')}
-          className="gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+          className="bg-blue-600 hover:bg-blue-700 gap-2"
         >
           <Plus className="w-4 h-4" />
           Nouvelle réparation
         </Button>
       </div>
 
-      {/* Filter Pills ... (unchanged) */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+      {/* Quick Filters */}
+      <div className="flex gap-2 overflow-x-auto pb-2">
         <Button
           variant={statusFilter === 'all' ? 'default' : 'outline'}
           onClick={() => setStatusFilter('all')}
-          className={statusFilter === 'all' ? 'bg-blue-600 flex-shrink-0' : 'flex-shrink-0'}
+          className={statusFilter === 'all' ? 'bg-gray-800' : ''}
           size="sm"
         >
-          Tous ({statusCounts.all})
+          Toutes
         </Button>
         <Button
           variant={statusFilter === 'reçue' ? 'default' : 'outline'}
           onClick={() => setStatusFilter('reçue')}
-          className={statusFilter === 'reçue' ? 'bg-gray-600 hover:bg-gray-700 flex-shrink-0' : 'flex-shrink-0'}
+          className={statusFilter === 'reçue' ? 'bg-purple-600 hover:bg-purple-700' : ''}
           size="sm"
         >
-          Reçue ({statusCounts.reçue})
+          Reçue ({statusCounts['reçue'] || 0})
         </Button>
         <Button
           variant={statusFilter === 'en_cours' ? 'default' : 'outline'}
           onClick={() => setStatusFilter('en_cours')}
-          className={statusFilter === 'en_cours' ? 'bg-orange-600 hover:bg-orange-700 flex-shrink-0' : 'flex-shrink-0'}
+          className={statusFilter === 'en_cours' ? 'bg-orange-600 hover:bg-orange-700' : ''}
           size="sm"
         >
-          En cours ({statusCounts.en_cours})
+          En cours ({statusCounts['en_cours'] || 0})
         </Button>
         <Button
           variant={statusFilter === 'en_attente_pieces' ? 'default' : 'outline'}
           onClick={() => setStatusFilter('en_attente_pieces')}
-          className={statusFilter === 'en_attente_pieces' ? 'bg-yellow-600 hover:bg-yellow-700 flex-shrink-0' : 'flex-shrink-0'}
+          className={statusFilter === 'en_attente_pieces' ? 'bg-yellow-600 hover:bg-yellow-700' : ''}
           size="sm"
         >
-          En attente pièces ({statusCounts.en_attente_pieces})
+          En attente pièces ({statusCounts['en_attente_pieces'] || 0})
         </Button>
         <Button
           variant={statusFilter === 'réparée' ? 'default' : 'outline'}
           onClick={() => setStatusFilter('réparée')}
-          className={statusFilter === 'réparée' ? 'bg-blue-600 hover:bg-blue-700 flex-shrink-0' : 'flex-shrink-0'}
+          className={statusFilter === 'réparée' ? 'bg-blue-600 hover:bg-blue-700' : ''}
           size="sm"
         >
-          Réparée ({statusCounts.réparée})
+          Réparée ({statusCounts['réparée'] || 0})
         </Button>
         <Button
           variant={statusFilter === 'payée_collectée' ? 'default' : 'outline'}
           onClick={() => setStatusFilter('payée_collectée')}
-          className={statusFilter === 'payée_collectée' ? 'bg-green-600 hover:bg-green-700 flex-shrink-0' : 'flex-shrink-0'}
+          className={statusFilter === 'payée_collectée' ? 'bg-green-600 hover:bg-green-700' : ''}
           size="sm"
         >
-          Payée ({statusCounts.payée_collectée})
+          Payée/Collectée ({statusCounts['payée_collectée'] || 0})
         </Button>
       </div>
 
       <Card className="p-4 md:p-6">
-        {/* Search and Filters, same as before */}
+        {/* Search and Filters */}
         <div className="mb-6 space-y-3">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
@@ -248,15 +284,13 @@ export function RepairsScreen({ onNavigate }: RepairsScreenProps) {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 text-sm text-gray-500">Ticket</th>
-                <th className="text-left py-3 px-4 text-sm text-gray-500">Client</th>
-                <th className="text-left py-3 px-4 text-sm text-gray-500">Téléphone</th>
-                <th className="text-left py-3 px-4 text-sm text-gray-500">Réparation</th>
-                <th className="text-left py-3 px-4 text-sm text-gray-500">Date</th>
-                <th className="text-center py-3 px-4 text-sm text-gray-500">Statut</th>
-                <th className="text-right py-3 px-4 text-sm text-gray-500">Prix</th>
-                <th className="text-center py-3 px-4 text-sm text-gray-500">Paiement</th>
-                <th className="text-center py-3 px-4 text-sm text-gray-500">Actions</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-600">Ticket</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-600">Client</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-600">Appareil</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-600">Statut</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-600">Prix</th>
+                <th className="text-center py-3 px-4 font-semibold text-gray-600">Paiement</th>
+                <th className="text-center py-3 px-4 font-semibold text-gray-600">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -266,36 +300,23 @@ export function RepairsScreen({ onNavigate }: RepairsScreenProps) {
                 const needsPayment = paymentStatus !== 'payé';
 
                 return (
-                  <tr
-                    key={repair.id}
-                    className={`border-b border-gray-100 hover:bg-gray-50 ${needsPayment && repair.statut === 'réparée' ? 'bg-yellow-50/30' : ''
-                      }`}
-                  >
+                  <tr key={repair.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-3 px-4 font-medium text-blue-600">{repair.numeroTicket}</td>
+                    <td className="py-3 px-4 text-gray-900">{repair.clientNom}</td>
+                    <td className="py-3 px-4 text-gray-600">
+                      <div>{repair.modelePhone}</div>
+                      <div className="text-xs text-gray-400">{repair.typeReparation}</div>
+                    </td>
                     <td className="py-3 px-4">
-                      <p className="text-sm font-semibold text-blue-600">{repair.numeroTicket}</p>
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-900">
-                      {repair.clientNom}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-600">
-                      {repair.modelePhone}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-600">
-                      {repair.typeReparation}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-600">
-                      {new Date(repair.dateCreation).toLocaleDateString('fr-CA')}
-                    </td>
-                    <td className="py-3 px-4 text-center">
                       <RepairStatusBadge
                         status={repair.statut}
                         onChange={(newStatus) => handleStatusChange(repair.id, newStatus)}
                         editable={true}
                       />
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-900 text-right">
+                    <td className="py-3 px-4">
                       <div>
-                        <p className="font-semibold">{Number(repair.prix).toFixed(2)} $</p>
+                        <span className="font-semibold text-gray-900">{Number(repair.prix).toFixed(2)} $</span>
                         {needsPayment && (
                           <p className="text-xs text-red-600">
                             Reste: {remaining.toFixed(2)} $
@@ -326,6 +347,15 @@ export function RepairsScreen({ onNavigate }: RepairsScreenProps) {
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2 text-gray-600 hover:text-gray-800"
+                          title="Imprimer"
+                          onClick={() => handlePrintClick(repair)}
+                        >
+                          <Printer className="w-4 h-4" />
+                        </Button>
                         {needsPayment && (
                           <Button
                             variant="ghost"
@@ -337,6 +367,15 @@ export function RepairsScreen({ onNavigate }: RepairsScreenProps) {
                             <CreditCard className="w-4 h-4" />
                           </Button>
                         )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2 text-red-500 hover:text-red-700 hover:bg-red-50"
+                          title="Supprimer"
+                          onClick={() => handleDeleteClick(repair)}
+                        >
+                          <Trash className="w-4 h-4" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -410,6 +449,14 @@ export function RepairsScreen({ onNavigate }: RepairsScreenProps) {
                     <Button
                       variant="outline"
                       size="sm"
+                      className="gap-1 px-2"
+                      onClick={() => printRepairLabel(repair)}
+                    >
+                      <Printer className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="gap-1"
                       onClick={() => handleViewRepair(repair)}
                     >
@@ -454,17 +501,41 @@ export function RepairsScreen({ onNavigate }: RepairsScreenProps) {
         )}
       </Card>
 
-      <RepairDetailsModal
-        isOpen={isDetailsOpen}
-        onClose={() => setIsDetailsOpen(false)}
-        repair={selectedRepair}
+      {selectedRepair && (
+        <>
+          <RepairDetailsModal
+            isOpen={isDetailsOpen}
+            onClose={() => setIsDetailsOpen(false)}
+            repair={selectedRepair}
+          />
+          <EditRepairModal
+            isOpen={isEditOpen}
+            onClose={() => {
+              setIsEditOpen(false);
+            }}
+            onSave={loadRepairs}
+            repair={selectedRepair}
+          />
+        </>
+      )}
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Supprimer la réparation"
+        description={`Êtes-vous sûr de vouloir supprimer le ticket ${repairToDelete?.numeroTicket} ? Cette action est irréversible.`}
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
       />
 
-      <EditRepairModal
-        isOpen={isEditOpen}
-        onClose={() => setIsEditOpen(false)}
-        repair={selectedRepair}
-        onSave={handleEditSave}
+      <PrintOptionsModal
+        isOpen={isPrintModalOpen}
+        onClose={() => setIsPrintModalOpen(false)}
+        onPrintLabel={handlePrintLabel}
+        onPrintReceipt={handlePrintReceipt}
+        title="Imprimer"
+        description="Quel document voulez-vous imprimer ?"
       />
     </div>
   );

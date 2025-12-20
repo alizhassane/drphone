@@ -1,0 +1,168 @@
+[2025-12-18T04:32:26.165Z] GET /api/products Body: undefined
+[2025-12-18T04:32:26.227Z] POST /api/repairs Body: {"client_id":1,"device_details":"Test Device","issue_description":"Test Loop","status":"reçue","cost_estimate":100,"warranty":90,"parts":[]}
+[2025-12-18T04:33:44.923Z] GET /api/products Body: undefined
+[2025-12-18T04:33:45.010Z] POST /api/repairs Body: {"client_id":1,"device_details":"Test Device","issue_description":"Test Loop","status":"reçue","cost_estimate":100,"warranty":90,"parts":[]}
+[2025-12-18T04:34:35.977Z] GET /api/stats/dashboard Body: undefined
+[2025-12-18T04:34:37.396Z] GET /api/repairs Body: undefined
+[2025-12-18T04:34:38.923Z] GET /api/clients Body: undefined
+[2025-12-18T04:34:48.342Z] GET /api/products?search=iPhone+15+Pro+Max Body: undefined
+[2025-12-18T04:34:56.585Z] POST /api/repairs Body: {"client_id":5,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"warranty":90}
+[2025-12-18T04:34:58.394Z] GET /api/repairs Body: undefined
+[2025-12-18T04:35:17.546Z] PUT /api/repairs/24 Body: {"issue_description":"screen - ","cost_estimate":0,"depot":0,"status":"reçue","warranty":90}
+[2025-12-18T04:35:17.601Z] GET /api/repairs Body: undefined
+[2025-12-18T04:35:28.312Z] PUT /api/repairs/23 Body: {"issue_description":"Test Loop","cost_estimate":0,"depot":0,"status":"reçue","warranty":90}
+[2025-12-18T04:35:28.368Z] GET /api/repairs Body: undefined
+[2025-12-18T04:36:30.948Z] GET /api/phones? Body: undefined
+[2025-12-18T04:36:35.275Z] GET /api/products Body: undefined
+[2025-12-18T04:36:40.677Z] GET /api/clients Body: undefined
+[2025-12-18T04:38:43.118Z] GET /api/repairs Body: undefined
+[2025-12-18T04:38:49.314Z] PUT /api/repairs/22 Body: {"issue_description":"screen - ","cost_estimate":100,"depot":0,"status":"reçue","warranty":90}
+[2025-12-18T04:38:49.368Z] GET /api/repairs Body: undefined
+[2025-12-18T04:39:33.798Z] GET /api/phones? Body: undefined
+[2025-12-18T04:39:34.633Z] GET /api/repairs Body: undefined
+[2025-12-18T04:39:43.755Z] PUT /api/repairs/22 Body: {"issue_description":"screen - ","cost_estimate":100,"depot":0,"status":"reçue","warranty":90}
+[2025-12-18T04:39:43.799Z] GET /api/repairs Body: undefined
+[2025-12-18T04:39:56.713Z] PUT /api/repairs/22 Body: {"issue_description":"screen - ","cost_estimate":100,"depot":0,"status":"reçue","warranty":90}
+[2025-12-18T04:39:56.752Z] GET /api/repairs Body: undefined
+[2025-12-19T01:31:47.153Z] GET /api/stats/dashboard Body: undefined
+[2025-12-19T01:32:01.140Z] GET /api/products Body: undefined
+[2025-12-19T01:32:01.144Z] GET /api/clients Body: undefined
+[2025-12-19T01:32:01.155Z] GET /api/repairs Body: undefined
+[2025-12-19T01:32:01.174Z] GET /api/phones?status=in_stock Body: undefined
+[2025-12-19T01:32:03.102Z] GET /api/products Body: undefined
+[2025-12-19T01:32:16.065Z] GET /api/repairs Body: undefined
+[2025-12-19T05:28:23.816Z] GET /api/stats/dashboard Body: undefined
+[2025-12-19T05:28:25.780Z] GET /api/repairs Body: undefined
+[2025-12-19T05:28:48.502Z] GET /api/clients Body: undefined
+[2025-12-19T05:28:57.317Z] GET /api/products?search=iPhone+15+Pro+Max Body: undefined
+[2025-12-19T05:29:09.547Z] POST /api/repairs Body: {"client_id":3,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - 2001","status":"reçue","cost_estimate":100,"parts":["20"],"warranty":90}
+[2025-12-19T05:29:11.397Z] GET /api/repairs Body: undefined
+[2025-12-19T05:30:37.478Z] GET /api/repairs Body: undefined
+[2025-12-19T05:31:27.286Z] GET /api/clients Body: undefined
+[2025-12-19T05:31:46.170Z] GET /api/products?search=iPhone+15+Pro+Max Body: undefined
+[2025-12-19T05:31:54.531Z] POST /api/repairs Body: {"client_id":3,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"warranty":90}
+[2025-12-19T05:31:57.012Z] GET /api/repairs Body: undefined
+[2025-12-20T21:06:16.595Z] GET /api/stats/dashboard Body: undefined
+[2025-12-20T21:06:19.629Z] GET /api/products Body: undefined
+[2025-12-20T21:06:19.632Z] GET /api/repairs Body: undefined
+[2025-12-20T21:06:19.634Z] GET /api/clients Body: undefined
+[2025-12-20T21:06:19.636Z] GET /api/phones?status=in_stock Body: undefined
+[2025-12-20T21:07:05.923Z] GET /api/products Body: undefined
+[2025-12-20T21:07:07.135Z] GET /api/phones? Body: undefined
+[2025-12-20T21:07:08.445Z] GET /api/products Body: undefined
+[2025-12-20T21:07:09.941Z] GET /api/phones? Body: undefined
+[2025-12-20T21:07:12.657Z] GET /api/products Body: undefined
+[2025-12-20T21:07:13.482Z] GET /api/repairs Body: undefined
+[2025-12-20T21:07:19.128Z] GET /api/clients Body: undefined
+[2025-12-20T21:07:21.156Z] GET /api/sales Body: undefined
+[2025-12-20T21:07:22.866Z] GET /api/stats/daily Body: undefined
+[2025-12-20T21:08:08.091Z] GET /api/sales Body: undefined
+[2025-12-20T21:08:10.084Z] GET /api/clients Body: undefined
+[2025-12-20T21:08:15.829Z] GET /api/repairs Body: undefined
+[2025-12-20T21:08:33.893Z] GET /api/phones? Body: undefined
+[2025-12-20T21:08:40.409Z] GET /api/products Body: undefined
+[2025-12-20T21:10:39.812Z] GET /api/phones? Body: undefined
+[2025-12-20T21:10:42.509Z] GET /api/products Body: undefined
+[2025-12-20T21:10:42.512Z] GET /api/clients Body: undefined
+[2025-12-20T21:10:42.514Z] GET /api/repairs Body: undefined
+[2025-12-20T21:10:42.525Z] GET /api/phones?status=in_stock Body: undefined
+[2025-12-20T21:10:46.647Z] GET /api/phones? Body: undefined
+[2025-12-20T21:10:48.630Z] GET /api/repairs Body: undefined
+[2025-12-20T21:14:13.140Z] GET /api/repairs Body: undefined
+[2025-12-20T21:14:53.530Z] GET /api/clients Body: undefined
+[2025-12-20T21:15:03.530Z] GET /api/products?search=iPhone+15+Pro+Max Body: undefined
+[2025-12-20T21:15:13.565Z] POST /api/repairs Body: {"client_id":5,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"warranty":90}
+[2025-12-20T21:15:15.187Z] GET /api/repairs Body: undefined
+[2025-12-20T21:20:40.106Z] GET /api/repairs Body: undefined
+[2025-12-20T21:29:30.113Z] GET /api/repairs Body: undefined
+[2025-12-20T21:32:13.502Z] GET /api/clients Body: undefined
+[2025-12-20T21:32:22.733Z] GET /api/products?search=iPhone+15+Pro+Max Body: undefined
+[2025-12-20T21:32:31.416Z] POST /api/repairs Body: {"client_id":3,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"warranty":90}
+[2025-12-20T21:32:35.711Z] GET /api/repairs Body: undefined
+[2025-12-20T21:36:04.105Z] GET /api/repairs Body: undefined
+[2025-12-20T21:40:46.616Z] GET /api/repairs Body: undefined
+[2025-12-20T21:41:49.112Z] GET /api/repairs Body: undefined
+[2025-12-20T21:42:56.728Z] GET /api/clients Body: undefined
+[2025-12-20T21:43:15.796Z] GET /api/products?search=iPhone+15+Pro+Max Body: undefined
+[2025-12-20T21:43:25.233Z] POST /api/repairs Body: {"client_id":1,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ffgweghrehwer","status":"reçue","cost_estimate":100,"parts":["20"],"warranty":90}
+[2025-12-20T21:43:27.080Z] GET /api/repairs Body: undefined
+[2025-12-20T21:49:51.735Z] GET /api/clients Body: undefined
+[2025-12-20T21:50:04.956Z] GET /api/products?search=iPhone+15+Pro+Max Body: undefined
+[2025-12-20T21:51:18.837Z] POST /api/repairs Body: {"client_id":2,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":150,"parts":["21"],"warranty":90}
+[2025-12-20T21:51:20.218Z] GET /api/repairs Body: undefined
+[2025-12-20T21:54:15.198Z] GET /api/clients Body: undefined
+[2025-12-20T21:54:28.133Z] GET /api/repairs Body: undefined
+[2025-12-20T21:57:07.597Z] GET /api/stats/dashboard Body: undefined
+[2025-12-20T21:57:09.203Z] GET /api/phones? Body: undefined
+[2025-12-20T21:57:11.299Z] GET /api/repairs Body: undefined
+[2025-12-20T21:58:19.598Z] GET /api/repairs Body: undefined
+[2025-12-20T21:59:26.128Z] GET /api/repairs Body: undefined
+[2025-12-20T21:59:49.828Z] GET /api/clients Body: undefined
+[2025-12-20T22:00:28.162Z] GET /api/repairs Body: undefined
+[2025-12-20T22:00:38.960Z] GET /api/clients Body: undefined
+[2025-12-20T22:00:46.849Z] GET /api/products?search=iPhone+15+Pro+Max Body: undefined
+[2025-12-20T22:01:09.063Z] POST /api/repairs Body: {"client_id":3,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"warranty":90}
+[2025-12-20T22:01:10.339Z] GET /api/repairs Body: undefined
+[2025-12-20T22:03:30.163Z] GET /api/repairs Body: undefined
+[2025-12-20T22:04:16.070Z] GET /api/clients Body: undefined
+[2025-12-20T22:04:24.196Z] GET /api/products?search=iPhone+15+Pro+Max Body: undefined
+[2025-12-20T22:04:36.116Z] POST /api/repairs Body: {"client_id":3,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"warranty":90}
+[2025-12-20T22:04:37.716Z] GET /api/repairs Body: undefined
+[2025-12-20T22:06:53.113Z] GET /api/repairs Body: undefined
+[2025-12-20T22:07:39.126Z] GET /api/clients Body: undefined
+[2025-12-20T22:07:49.646Z] GET /api/products?search=iPhone+15+Pro+Max Body: undefined
+[2025-12-20T22:08:03.911Z] POST /api/repairs Body: {"client_id":4,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"warranty":90}
+[2025-12-20T22:08:05.459Z] GET /api/repairs Body: undefined
+[2025-12-20T22:09:31.142Z] GET /api/repairs Body: undefined
+[2025-12-20T22:09:53.315Z] GET /api/clients Body: undefined
+[2025-12-20T22:10:01.950Z] GET /api/products?search=iPhone+15+Pro+Max Body: undefined
+[2025-12-20T22:10:16.963Z] POST /api/repairs Body: {"client_id":3,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"warranty":90}
+[2025-12-20T22:10:19.061Z] GET /api/repairs Body: undefined
+[2025-12-20T22:13:06.167Z] GET /api/repairs Body: undefined
+[2025-12-20T22:13:07.154Z] GET /api/repairs Body: undefined
+[2025-12-20T22:13:33.202Z] GET /api/repairs Body: undefined
+[2025-12-20T22:13:35.145Z] GET /api/repairs Body: undefined
+[2025-12-20T22:14:11.237Z] GET /api/clients Body: undefined
+[2025-12-20T22:14:18.061Z] GET /api/products?search=iPhone+15+Pro Body: undefined
+[2025-12-20T22:14:20.241Z] GET /api/products?search=iPhone+15+Pro+Max Body: undefined
+[2025-12-20T22:14:28.213Z] POST /api/repairs Body: {"client_id":4,"device_details":"Apple iPhone 15 Pro Max","issue_description":"battery - ","status":"reçue","cost_estimate":100,"parts":["20"],"warranty":90}
+[2025-12-20T22:14:29.225Z] GET /api/repairs Body: undefined
+[2025-12-20T22:15:18.757Z] PUT /api/repairs/35 Body: {"issue_description":"battery - ","cost_estimate":100,"depot":0,"status":"reçue","notes":"yughuji","warranty":90}
+[2025-12-20T22:15:18.784Z] GET /api/repairs Body: undefined
+[2025-12-20T22:16:30.166Z] GET /api/repairs Body: undefined
+[2025-12-20T22:16:43.117Z] GET /api/repairs Body: undefined
+[2025-12-20T22:17:08.381Z] GET /api/clients Body: undefined
+[2025-12-20T22:17:16.447Z] GET /api/products?search=iPhone+15+Pro+Max Body: undefined
+[2025-12-20T22:17:26.357Z] POST /api/repairs Body: {"client_id":3,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"notes":"uiytuyhioyu","warranty":90}
+[2025-12-20T22:17:27.496Z] GET /api/repairs Body: undefined
+[2025-12-20T22:19:14.144Z] GET /api/repairs Body: undefined
+[2025-12-20T22:19:34.122Z] GET /api/repairs Body: undefined
+[2025-12-20T22:19:37.087Z] GET /api/repairs Body: undefined
+[2025-12-20T22:19:39.161Z] GET /api/repairs Body: undefined
+[2025-12-20T22:19:41.127Z] GET /api/repairs Body: undefined
+[2025-12-20T22:19:43.137Z] GET /api/repairs Body: undefined
+[2025-12-20T22:20:02.137Z] GET /api/repairs Body: undefined
+[2025-12-20T22:24:09.116Z] GET /api/stats/dashboard Body: undefined
+[2025-12-20T22:24:10.605Z] GET /api/repairs Body: undefined
+[2025-12-20T22:48:41.266Z] GET /api/repairs Body: undefined
+[2025-12-20T22:49:53.513Z] GET /api/stats/dashboard Body: undefined
+[2025-12-20T22:49:56.807Z] GET /api/repairs Body: undefined
+[2025-12-20T22:49:59.589Z] GET /api/clients Body: undefined
+[2025-12-20T22:50:09.428Z] GET /api/products?search=iPhone+15+Pro+Max Body: undefined
+[2025-12-20T22:50:21.866Z] POST /api/repairs Body: {"client_id":4,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"notes":"tregthgehbefnh","warranty":90}
+[2025-12-20T22:50:42.377Z] GET /api/repairs Body: undefined
+[2025-12-20T22:51:52.298Z] GET /api/repairs Body: undefined
+[2025-12-20T23:41:17.435Z] GET /api/stats/dashboard Body: undefined
+[2025-12-20T23:41:19.890Z] GET /api/repairs Body: undefined
+[2025-12-20T23:41:24.920Z] GET /api/clients Body: undefined
+[2025-12-20T23:41:32.869Z] GET /api/products?search=iPhone+15+Pro+Max Body: undefined
+[2025-12-20T23:41:52.483Z] POST /api/repairs Body: {"client_id":4,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"notes":"eccran casse","warranty":90}
+[2025-12-20T23:43:10.719Z] GET /api/repairs Body: undefined
+[2025-12-20T23:47:33.155Z] GET /api/stats/dashboard Body: undefined
+[2025-12-20T23:47:41.452Z] GET /api/phones? Body: undefined
+[2025-12-20T23:48:29.958Z] GET /api/clients Body: undefined
+[2025-12-20T23:49:15.533Z] GET /api/phones? Body: undefined
+[2025-12-20T23:49:18.645Z] GET /api/sales Body: undefined
+[2025-12-20T23:49:19.385Z] GET /api/stats/daily Body: undefined
+[2025-12-20T23:49:54.217Z] GET /api/repairs Body: undefined
+[2025-12-20T23:49:55.535Z] GET /api/clients Body: undefined

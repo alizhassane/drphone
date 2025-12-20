@@ -10,6 +10,8 @@ import { ImprovedPaymentScreen } from './screens/ImprovedPaymentScreen';
 import { POSScreen } from './screens/POSScreen';
 import { SalesHistoryScreen } from './screens/SalesHistoryScreen';
 import { ReportsScreen } from './screens/ReportsScreen';
+import PhonesScreen from './screens/PhonesScreen';
+import BuyPhoneScreen from './screens/BuyPhoneScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { mockShopSettings } from './mockData';
 import type { Screen, Repair, TransactionData, ShopSettings } from './types';
@@ -107,6 +109,12 @@ export default function App() {
         )}
         {currentScreen === 'reports' && (
           <ReportsScreen />
+        )}
+        {currentScreen === 'phones' && (
+          <PhonesScreen onNavigate={handleNavigate} />
+        )}
+        {currentScreen === 'buy-phone' && (
+          <BuyPhoneScreen onNavigate={handleNavigate} />
         )}
         {currentScreen === 'settings' && (
           <SettingsScreen

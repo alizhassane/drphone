@@ -61,6 +61,15 @@ export const getProductBySku = async (sku: string) => {
     }
 };
 
+export const getProduct = async (id: string) => {
+    try {
+        const response = await api.get(`/products/${id}`);
+        return mapFromApi(response.data);
+    } catch (error) {
+        return null;
+    }
+};
+
 export const updateProduct = async (id: string, product: Omit<Product, 'id'>) => {
     const payload = {
         name: product.nom,

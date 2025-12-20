@@ -2,6 +2,7 @@ import api from './api';
 import { Repair } from '../app/types';
 
 const mapFromApi = (data: any): Repair => {
+    // console.log('mapFromApi', data.id); 
     if (!data) {
         return {
             id: Math.random().toString(),
@@ -24,13 +25,16 @@ const mapFromApi = (data: any): Repair => {
         numeroTicket: data.id ? `REP-${data.id}` : 'REP-ERR',
         clientId: (data.client_id || '').toString(),
         clientNom: data.client_name || data.clientNom || 'Inconnu', // Handle both snake_case and potential camelCase if passed from elsewhere
+        clientTelephone: data.clientTelephone || data.client_phone,
+        clientEmail: data.clientEmail || data.client_email,
         modelePhone: data.device_details || data.modelePhone || '',
-        typeReparation: 'Réparation',
+        typeReparation: data.typeReparation || data.repair_type || 'Réparation',
+        remarque: data.remarque || data.notes || '',
         description: data.issue_description || data.description || '',
         statut: data.status || data.statut || 'reçue',
         prix: parseFloat(data.cost_estimate || data.prix || 0),
         depot: parseFloat(data.depot || 0),
-        piecesUtilisees: data.parts ? data.parts.map((p: any) => p.product_name || p.nom) : [],
+        piecesUtilisees: data.piecesUtilisees || (data.parts ? data.parts.map((p: any) => p.product_name || p.nom) : []),
         garantie: data.warranty !== undefined ? data.warranty : 90, // Default to 90 days if not specified
         dateCreation: data.created_at || new Date().toISOString()
     };
@@ -50,6 +54,7 @@ export const createRepair = async (repair: Omit<Repair, 'id'>) => {
         status: repair.statut || 'Pending',
         cost_estimate: repair.prix,
         parts: (repair as any).parts,
+        notes: (repair as any).notes || repair.remarque, // Map frontend notes/remarque to backend
         warranty: repair.garantie // Map frontend 'garantie' to backend 'warranty'
     };
     const response = await api.post('/repairs', payload);
@@ -68,8 +73,13 @@ export const updateRepair = async (id: number, updates: Partial<Repair>) => {
         cost_estimate: updates.prix,
         depot: updates.depot,
         status: updates.statut,
+        notes: updates.remarque, // Map frontend 'remarque' to backend 'notes'
         warranty: updates.garantie // Map frontend 'garantie' to backend 'warranty'
     };
     const response = await api.put(`/repairs/${id}`, payload);
     return mapFromApi(response.data);
+};
+
+export const deleteRepair = async (id: number) => {
+    await api.delete(`/repairs/${id}`);
 };

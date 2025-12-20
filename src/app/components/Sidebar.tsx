@@ -27,6 +27,7 @@ export function Sidebar({ currentScreen, onNavigate, isOpen, onToggle, shopSetti
     { id: 'dashboard' as Screen, label: 'Tableau de bord', icon: LayoutDashboard },
     { id: 'pos' as Screen, label: 'Point de vente', icon: ShoppingCart },
     { id: 'inventory' as Screen, label: 'Inventaire', icon: Package },
+    { id: 'phones' as Screen, label: 'Téléphones', icon: Smartphone },
     { id: 'repairs' as Screen, label: 'Réparations', icon: Wrench },
     { id: 'customers' as Screen, label: 'Clients', icon: Users },
     { id: 'sales-history' as Screen, label: 'Historique ventes', icon: Receipt },

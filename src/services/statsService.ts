@@ -6,6 +6,7 @@ export interface DashboardStats {
     todayProfit: number;
     ongoingRepairs: number;
     lowStockCount: number;
+    phonesInStock: number;
     recentRepairs: any[];
     lowStockItems: any[];
 }

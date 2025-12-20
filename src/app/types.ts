@@ -34,13 +34,18 @@ export interface Repair {
   numeroTicket: string;
   clientId: string;
   clientNom: string;
+  clientTelephone?: string; // Added client phone number
+  clientEmail?: string; // Added client email
   modelePhone: string;
   typeReparation: string;
+  remarque?: string; // Added remark field
   description?: string;
   statut: RepairStatus;
   prix: number;
   depot: number;
   piecesUtilisees: string[];
+  parts?: number[];
+  device_details?: string;
   garantie: number;
   dateCreation: string;
   dateTermine?: string;
@@ -92,7 +97,7 @@ export interface CartItem {
   prix: number;
   quantite: number;
   categorie: string;
-  type?: 'product' | 'repair' | 'manual'; // NEW: Added 'manual' for custom items
+  type?: 'product' | 'repair' | 'manual' | 'phone'; // Added 'phone'
   repairId?: string; // NEW: Link to repair if applicable
   priceModified?: boolean; // NEW: Flag to indicate if price was manually changed
   originalPrice?: number; // NEW: Store original price if modified
@@ -142,6 +147,8 @@ export type Screen =
   | 'sales-history'
   | 'sales-history'
   | 'reports'
+  | 'phones'
+  | 'buy-phone'
   | 'settings';
 
 export interface User {
@@ -150,4 +157,21 @@ export interface User {
   email: string;
   role: 'Admin' | 'Technicien' | 'Vendeur';
   statut: 'Actif' | 'Inactif';
+}
+
+export interface Phone {
+  id: string;
+  imei: string;
+  brand: string;
+  model: string;
+  storage: string;
+  color: string;
+  condition: 'A' | 'B' | 'C';
+  battery_health: number;
+  buying_price: number;
+  selling_price: number;
+  warranty_days: number;
+  status: 'in_stock' | 'sold' | 'returned';
+  source: 'customer' | 'supplier';
+  created_at?: string;
 }

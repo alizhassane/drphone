@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, Wrench, AlertTriangle, Loader2 } from 'lucide-react';
+import { DollarSign, TrendingUp, Wrench, AlertTriangle, Loader2, Smartphone } from 'lucide-react';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import * as statsService from '../../services/statsService';
@@ -119,6 +119,20 @@ export function DashboardScreen() {
             </div>
           </div>
         </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Téléphones en Stock</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {Number(stats.phonesInStock || 0)}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Smartphone className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -166,8 +180,8 @@ export function DashboardScreen() {
             ) : (
               stats.lowStockItems.map((product: any) => (
                 <div key={product.id} className={`p-3 rounded-lg border ${(product.stock_quantity || 0) === 0
-                    ? 'bg-red-50 border-red-200'
-                    : 'bg-orange-50 border-orange-200'
+                  ? 'bg-red-50 border-red-200'
+                  : 'bg-orange-50 border-orange-200'
                   }`}>
                   <p className="text-sm font-semibold text-gray-900">{product.name || product.nom}</p>
                   <p className="text-xs text-gray-600 mt-1">

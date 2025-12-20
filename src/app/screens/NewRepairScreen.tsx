@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, X, Package, Check, RefreshCw, ChevronsUpDown } from 'lucide-react';
+import { ArrowLeft, Plus, X, Package, Check, RefreshCw, ChevronsUpDown, FileText } from 'lucide-react';
 import { cn } from '../components/ui/utils';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -26,6 +26,10 @@ import * as clientService from '../../services/clientService';
 import * as repairService from '../../services/repairService';
 import { getProducts } from '../../services/productService';
 import { INVENTORY_HIERARCHY } from '../data/inventoryHierarchy';
+import { printRepairLabel } from '../utils/printRepairLabel';
+import { ConfirmationModal } from '../components/modals/ConfirmationModal';
+import { PrintOptionsModal } from '../components/modals/PrintOptionsModal';
+import { printRepairReceipt } from '../utils/printRepairReceipt';
 
 interface NewRepairScreenProps {
   onNavigate: (screen: Screen) => void;
@@ -50,6 +54,7 @@ export function NewRepairScreen({ onNavigate }: NewRepairScreenProps) {
 
   const [repairType, setRepairType] = useState('');
   const [description, setDescription] = useState('');
+  const [notes, setNotes] = useState('');
   const [price, setPrice] = useState('');
   const [deposit, setDeposit] = useState('');
   const [warranty, setWarranty] = useState('90');
@@ -63,8 +68,13 @@ export function NewRepairScreen({ onNavigate }: NewRepairScreenProps) {
 
 
 
+
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [openClientCombobox, setOpenClientCombobox] = useState(false);
+
+  // Printing Modal State
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [repairToPrint, setRepairToPrint] = useState<Repair | null>(null);
 
   useEffect(() => {
     loadCustomers();
@@ -155,6 +165,7 @@ export function NewRepairScreen({ onNavigate }: NewRepairScreenProps) {
     }
   };
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -171,30 +182,78 @@ export function NewRepairScreen({ onNavigate }: NewRepairScreenProps) {
     // Format: "Brand - Model"
     const finalPhoneModel = `${brandName} ${selectedModel}`;
 
+    const client = customers.find(c => c.id === selectedCustomer);
+    const clientName = client ? `${client.prenom} ${client.nom}` : 'Inconnu';
+    const piecesNames = selectedParts.map(p => p.name);
+
     try {
       const repairData: any = {
         numeroTicket: `REP-${Date.now().toString().slice(-6)}`,
         clientId: selectedCustomer,
-        clientNom: customers.find(c => c.id === selectedCustomer)?.nom || 'Inconnu',
+        clientNom: clientName,
         modelePhone: finalPhoneModel,
         typeReparation: repairType,
         description: description,
+        remarque: notes,
         statut: status,
         prix: parseFloat(price),
         depot: deposit ? parseFloat(deposit) : 0,
-        piecesUtilisees: selectedParts.map(p => p.name), // Legacy string array
+        piecesUtilisees: piecesNames,
         parts: selectedParts.filter(p => !p.isManual).map(p => p.id), // NEW: Info for backend inventory tracking
         garantie: parseInt(warranty),
         dateCreation: new Date().toISOString(),
+        device_details: JSON.stringify({
+          brand: brandName,
+          model: selectedModel
+        })
       };
 
-      await repairService.createRepair(repairData);
-      alert('Réparation créée avec succès!');
-      onNavigate('repairs');
+      const newRepair = await repairService.createRepair(repairData);
+
+      // Open print modal instead of browser confirm
+      // Use local data for print object to ensure client name and pieces are correct
+      const printableRepair = {
+        ...newRepair,
+        clientNom: clientName,
+        clientTelephone: client?.telephone,
+        piecesUtilisees: piecesNames,
+        modelePhone: finalPhoneModel,
+        remarque: notes // Add remarque for printing
+      };
+
+      setRepairToPrint(printableRepair);
+      setIsPrintModalOpen(true);
+
+      // Navigation happens after modal interaction (or users can navigate back manually if they cancel)
+      // but to keep flow smooth, we might delay navigation? 
+      // Actually, standard flow: create -> prompt -> (print or not) -> navigate list
+      // But if we navigate list immediately, the modal might unmount if it's part of this screen? 
+      // Yes. So we must NOT navigate yet.
+      // We will handle navigation in the modal callbacks.
+
     } catch (error) {
       console.error('Failed to create repair', error);
-      alert('Erreur lors de la création de la réparation');
+      alert('Erreur lors de la création de la réparation: ' + (error as any).message);
     }
+  };
+
+
+
+  const handlePrintLabel = () => {
+    if (repairToPrint) {
+      printRepairLabel(repairToPrint);
+    }
+  };
+
+  const handlePrintReceipt = () => {
+    if (repairToPrint) {
+      printRepairReceipt(repairToPrint);
+    }
+  };
+
+  const handlePrintClose = () => {
+    setIsPrintModalOpen(false);
+    onNavigate('repairs');
   };
 
   // Helpers for Hierarchy
@@ -383,6 +442,20 @@ export function NewRepairScreen({ onNavigate }: NewRepairScreenProps) {
                     className="mt-1"
                   />
                 </div>
+                <div>
+                  <Label htmlFor="notes" className="flex items-center gap-2 text-gray-700">
+                    <FileText className="w-4 h-4 text-amber-500" />
+                    Remarque (Interne)
+                  </Label>
+                  <Textarea
+                    id="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Notes visible uniquement par l'équipe..."
+                    rows={2}
+                    className="mt-1.5 border-amber-200 focus:border-amber-400 focus:ring-amber-400 bg-amber-50/30"
+                  />
+                </div>
               </div>
             </Card>
 
@@ -567,6 +640,16 @@ export function NewRepairScreen({ onNavigate }: NewRepairScreenProps) {
         onClose={() => setIsClientModalOpen(false)}
         onAdd={handleCreateClient}
       />
+
+      <PrintOptionsModal
+        isOpen={isPrintModalOpen}
+        onClose={handlePrintClose}
+        onPrintLabel={handlePrintLabel}
+        onPrintReceipt={handlePrintReceipt}
+        title="Succès ! La réparation est créée"
+        description="Voulez-vous imprimer les documents ?"
+      />
     </div>
   );
 }
+

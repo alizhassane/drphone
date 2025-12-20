@@ -71,3 +71,34 @@ CREATE TABLE IF NOT EXISTS payments (
     method TEXT,
     date DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create Phones Table (NEW)
+CREATE TABLE IF NOT EXISTS phones (
+    id TEXT PRIMARY KEY, -- UUID
+    imei TEXT UNIQUE NOT NULL,
+    brand TEXT NOT NULL,
+    model TEXT NOT NULL,
+    storage TEXT NOT NULL,
+    color TEXT NOT NULL,
+    condition TEXT NOT NULL, -- A, B, C
+    battery_health INTEGER,
+    buying_price REAL NOT NULL,
+    selling_price REAL NOT NULL,
+    warranty_days INTEGER DEFAULT 30,
+    status TEXT DEFAULT 'in_stock', -- in_stock, sold, returned
+    source TEXT DEFAULT 'customer', -- customer, supplier
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create Phone Purchases Table (NEW)
+CREATE TABLE IF NOT EXISTS phone_purchases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    phone_id TEXT REFERENCES phones(id),
+    client_id INTEGER REFERENCES clients(id),
+    purchase_price REAL NOT NULL,
+    payment_method TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Note: sale_items updated to support phone_id mapping
+-- ALTER TABLE sale_items ADD COLUMN phone_id TEXT REFERENCES phones(id);

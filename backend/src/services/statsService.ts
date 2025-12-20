@@ -56,12 +56,19 @@ export const getDashboardStats = async () => {
         `SELECT * FROM products WHERE stock_quantity <= min_stock_alert LIMIT 5`
     );
 
+    // 8. Phones in Stock
+    const phonesRes = await query(
+        `SELECT COUNT(*) as count FROM phones WHERE status = 'in_stock'`
+    );
+    const phonesInStock = parseInt(phonesRes.rows[0]?.count || 0);
+
     return {
         todaySales,
         monthSales,
         todayProfit,
         ongoingRepairs,
         lowStockCount,
+        phonesInStock, // NEW
         recentRepairs: recentRepairsRes.rows,
         lowStockItems: lowStockItemsRes.rows
     };
@@ -86,12 +93,14 @@ export const getDailyStats = async () => {
                 SUM(
                     CASE 
                         WHEN si.product_id IS NOT NULL THEN (si.unit_price - COALESCE(p.purchase_price, 0)) * si.quantity
+                        WHEN si.phone_id IS NOT NULL THEN (si.unit_price - COALESCE(ph.buying_price, 0)) * si.quantity
                         ELSE si.unit_price * si.quantity 
                     END
                 ) as profits
             FROM sales s
             JOIN sale_items si ON s.id = si.sale_id
             LEFT JOIN products p ON si.product_id = p.id
+            LEFT JOIN phones ph ON si.phone_id = ph.id
             WHERE s.created_at >= date('now', '-30 days')
             GROUP BY day
         ),

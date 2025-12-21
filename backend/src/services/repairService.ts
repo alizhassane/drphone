@@ -1,4 +1,110 @@
 import { query } from '../config/db.js';
+import * as smsService from './smsService.js';
+
+// ... existing code ...
+
+export const createRepair = async (repair: any) => {
+    try {
+        const { client_id, device_details, issue_description, cost_estimate, status, statut, parts, warranty, piecesUtilisees, typeReparation, notes } = repair;
+        const finalStatus = status || statut || 'reçue';
+        const finalWarranty = warranty !== undefined ? warranty : 90;
+        const partsListJson = JSON.stringify(piecesUtilisees || []);
+
+        // ... (existing insert logic) ...
+
+        const res = await query(
+            `INSERT INTO repairs (client_id, device_details, issue_description, status, cost_estimate, warranty, parts_list, repair_type, notes) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+            [client_id, device_details, issue_description, finalStatus, cost_estimate, finalWarranty, partsListJson, typeReparation, notes]
+        );
+        const newRepairId = res.lastID;
+
+        // Fetch full details including client for SMS
+        const fullRepairRes = await query(`
+            SELECT r.*, c.name as client_name, c.phone as client_phone 
+            FROM repairs r 
+            JOIN clients c ON r.client_id = c.id 
+            WHERE r.id = $1
+        `, [newRepairId]);
+        const newRepair = fullRepairRes.rows[0];
+
+        // ... (parts insertion) ...
+        if (parts && Array.isArray(parts) && parts.length > 0) {
+            for (const partId of parts) {
+                await query(
+                    `INSERT INTO repair_parts (repair_id, product_id) VALUES ($1, $2)`,
+                    [newRepair.id, partId]
+                );
+            }
+        }
+
+        // Send SMS Notification
+        if (newRepair.client_phone) {
+            smsService.sendRepairStatusUpdate(
+                newRepair.client_phone,
+                newRepair.client_name,
+                newRepair.id.toString(),
+                newRepair.status,
+                newRepair.device_details
+            ).catch(err => console.error("Failed to send creation SMS", err));
+        }
+
+        return newRepair;
+    } catch (error: any) {
+        // ... (error handling) ...
+        console.error('Error creating repair:', error);
+        throw error;
+    }
+};
+
+// ...
+
+export const updateRepairStatus = async (id: number, status: string) => {
+    // ... (existing update logic) ...
+    const currentRepairRes = await query('SELECT status FROM repairs WHERE id = $1', [id]);
+    const currentStatus = currentRepairRes.rows[0]?.status;
+
+    await query(
+        'UPDATE repairs SET status = $1 WHERE id = $2',
+        [status, id]
+    );
+
+    // ... (stock decrement logic) ...
+    if (isConsumedState(status) && !isConsumedState(currentStatus)) {
+        // ... (existing stock logic) ...
+        const partsRes = await query('SELECT product_id FROM repair_parts WHERE repair_id = $1', [id]);
+        const parts = partsRes.rows;
+
+        for (const part of parts) {
+            await query(
+                'UPDATE products SET stock_quantity = stock_quantity - 1 WHERE id = $1',
+                [part.product_id]
+            );
+        }
+    }
+
+    // Fetch updated with client info for SMS
+    const updatedRepairRes = await query(`
+        SELECT r.*, c.name as client_name, c.phone as client_phone 
+        FROM repairs r 
+        JOIN clients c ON r.client_id = c.id 
+        WHERE r.id = $1
+    `, [id]);
+    const updatedRepair = updatedRepairRes.rows[0];
+
+    // Send SMS Notification
+    if (updatedRepair && updatedRepair.client_phone) {
+        smsService.sendRepairStatusUpdate(
+            updatedRepair.client_phone,
+            updatedRepair.client_name,
+            updatedRepair.id.toString(),
+            updatedRepair.status,
+            updatedRepair.device_details
+        ).catch(err => console.error("Failed to send update SMS", err));
+    }
+
+    return updatedRepair;
+};
 
 export interface Repair {
     id?: number;
@@ -63,75 +169,10 @@ export const getAllRepairs = async () => {
     });
 };
 
-export const createRepair = async (repair: any) => {
-    try {
-        const { client_id, device_details, issue_description, cost_estimate, status, statut, parts, warranty, piecesUtilisees, typeReparation, notes } = repair;
-        const finalStatus = status || statut || 'reçue';
-        const finalWarranty = warranty !== undefined ? warranty : 90;
-        const partsListJson = JSON.stringify(piecesUtilisees || []);
-
-        const res = await query(
-            `INSERT INTO repairs (client_id, device_details, issue_description, status, cost_estimate, warranty, parts_list, repair_type, notes) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-            [client_id, device_details, issue_description, finalStatus, cost_estimate, finalWarranty, partsListJson, typeReparation, notes]
-        );
-        // Using lastID to fetch the new record because RETURNING clause support in sqlite3 driver can be flaky or non-existent depending on version/config
-        const newRepairId = res.lastID;
-        const fetchedRepairRes = await query('SELECT * FROM repairs WHERE id = $1', [newRepairId]);
-        const newRepair = fetchedRepairRes.rows[0];
-
-        if (parts && Array.isArray(parts) && parts.length > 0) {
-            for (const partId of parts) {
-                await query(
-                    `INSERT INTO repair_parts (repair_id, product_id) VALUES ($1, $2)`,
-                    [newRepair.id, partId]
-                );
-            }
-        }
-
-        return newRepair;
-    } catch (error: any) {
-        console.error('Error creating repair:', error);
-        const fs = require('fs');
-        const path = require('path');
-        try {
-            const logPath = path.join(process.cwd(), 'backend_error.log');
-            fs.appendFileSync(logPath, `[${new Date().toISOString()}] Error creating repair: ${error.message}\nStack: ${error.stack}\n`);
-        } catch (e) { console.error('Failed to log error', e); }
-        throw error;
-    }
-};
 
 // Helper to determine if a status implies parts have been consumed
 const isConsumedState = (status: string) => {
     return ['réparée', 'payée_collectée'].includes(status);
-};
-
-export const updateRepairStatus = async (id: number, status: string) => {
-    const currentRepairRes = await query('SELECT status FROM repairs WHERE id = $1', [id]);
-    const currentStatus = currentRepairRes.rows[0]?.status;
-
-    await query(
-        'UPDATE repairs SET status = $1 WHERE id = $2',
-        [status, id]
-    );
-
-    // Decrement stock if moving FROM a non-consumed state TO a consumed state
-    // consumed states: 'réparée', 'payée_collectée'
-    if (isConsumedState(status) && !isConsumedState(currentStatus)) {
-        const partsRes = await query('SELECT product_id FROM repair_parts WHERE repair_id = $1', [id]);
-        const parts = partsRes.rows;
-
-        for (const part of parts) {
-            await query(
-                'UPDATE products SET stock_quantity = stock_quantity - 1 WHERE id = $1',
-                [part.product_id]
-            );
-        }
-    }
-
-    const updatedRepair = await query('SELECT * FROM repairs WHERE id = $1', [id]);
-    return updatedRepair.rows[0];
 };
 
 export const updateRepair = async (id: number, updates: any) => {

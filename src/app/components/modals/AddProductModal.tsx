@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Card } from '../ui/card';
 import type { Product } from '../../types';
 import { getProductBySku } from '../../../services/productService';
-import { INVENTORY_HIERARCHY, QUALITY_OPTIONS } from '../../data/inventoryHierarchy';
+import * as inventoryService from '../../../services/inventoryService';
+import type { DeviceCategoryData } from '../../../services/inventoryService';
 import { ChevronRight, Box, Smartphone, ShieldCheck, Tag } from 'lucide-react';
 
 interface AddProductModalProps {
@@ -21,9 +22,18 @@ interface AddProductModalProps {
 // Legacy constants for Accessories
 const ACCESSORY_CATEGORIES = ['Coques', 'Chargeurs', 'Câbles', 'Écouteurs', 'Protection écran', 'Autres'];
 
+const QUALITY_OPTIONS: Record<string, string[]> = {
+  'Écran': ['TFT', 'OLED', 'Hard OLED', 'Soft OLED', 'OEM', 'Refurbished', 'Original'],
+  'Batterie': ['Standard', 'Premium', 'Original', 'Haute Capacité'],
+  'default': ['Standard', 'Premium', 'Original']
+};
+
 export function AddProductModal({ isOpen, onClose, onAdd, onEdit, productToEdit }: AddProductModalProps) {
   // Common State
   const [section, setSection] = useState<'Accessoires' | 'Pièces'>('Accessoires');
+
+  // Dynamic Hierarchy State
+  const [hierarchy, setHierarchy] = useState<DeviceCategoryData[]>([]);
 
   // Selection State for Parts
   const [selectedDeviceType, setSelectedDeviceType] = useState<string>('');
@@ -48,6 +58,19 @@ export function AddProductModal({ isOpen, onClose, onAdd, onEdit, productToEdit 
   const [loadingSku, setLoadingSku] = useState(false);
 
   useEffect(() => {
+    loadHierarchy();
+  }, []);
+
+  const loadHierarchy = async () => {
+    try {
+      const data = await inventoryService.getHierarchy();
+      setHierarchy(data);
+    } catch (e) {
+      console.error("Failed to load hierarchy in modal", e);
+    }
+  };
+
+  useEffect(() => {
     if (productToEdit) {
       setSection(productToEdit.section || 'Accessoires');
       setFormData({
@@ -68,7 +91,7 @@ export function AddProductModal({ isOpen, onClose, onAdd, onEdit, productToEdit 
   // Effect to auto-generate name for Parts
   useEffect(() => {
     if (section === 'Pièces' && !productToEdit) {
-      const deviceTypeObj = INVENTORY_HIERARCHY.find(d => d.id === selectedDeviceType);
+      const deviceTypeObj = hierarchy.find(d => d.id === selectedDeviceType);
       const brandObj = deviceTypeObj?.brands.find(b => b.id === selectedBrand);
 
       if (brandObj && selectedModel && selectedPart) {
@@ -79,7 +102,7 @@ export function AddProductModal({ isOpen, onClose, onAdd, onEdit, productToEdit 
         setFormData(prev => ({ ...prev, nom: generatedName, categorie: selectedPart }));
       }
     }
-  }, [section, selectedDeviceType, selectedBrand, selectedModel, selectedPart, selectedQuality, productToEdit]);
+  }, [section, selectedDeviceType, selectedBrand, selectedModel, selectedPart, selectedQuality, productToEdit, hierarchy]);
 
   const resetForm = () => {
     setSection('Accessoires');
@@ -180,19 +203,20 @@ export function AddProductModal({ isOpen, onClose, onAdd, onEdit, productToEdit 
 
   // Helpers
   const getBrands = () => {
-    const type = INVENTORY_HIERARCHY.find(t => t.id === selectedDeviceType);
+    const type = hierarchy.find(t => t.id === selectedDeviceType);
     return type ? type.brands : [];
   };
 
   const getModels = () => {
-    const type = INVENTORY_HIERARCHY.find(t => t.id === selectedDeviceType);
+    const type = hierarchy.find(t => t.id === selectedDeviceType);
     if (!type) return [];
     const brand = type.brands.find(b => b.id === selectedBrand);
     return brand ? brand.models : [];
   };
 
   const getParts = () => {
-    const type = INVENTORY_HIERARCHY.find(t => t.id === selectedDeviceType);
+    const type = hierarchy.find(t => t.id === selectedDeviceType);
+    // Backend service added default parts list to response
     return type ? type.parts : [];
   };
 
@@ -219,8 +243,8 @@ export function AddProductModal({ isOpen, onClose, onAdd, onEdit, productToEdit 
             <button
               type="button"
               className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 transition-all duration-200 ${section === 'Accessoires'
-                  ? 'border-blue-600 bg-blue-50 text-blue-700 font-bold'
-                  : 'border-transparent bg-gray-50 text-gray-500 hover:bg-gray-100'
+                ? 'border-blue-600 bg-blue-50 text-blue-700 font-bold'
+                : 'border-transparent bg-gray-50 text-gray-500 hover:bg-gray-100'
                 }`}
               onClick={() => setSection('Accessoires')}
             >
@@ -230,8 +254,8 @@ export function AddProductModal({ isOpen, onClose, onAdd, onEdit, productToEdit 
             <button
               type="button"
               className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 transition-all duration-200 ${section === 'Pièces'
-                  ? 'border-blue-600 bg-blue-50 text-blue-700 font-bold'
-                  : 'border-transparent bg-gray-50 text-gray-500 hover:bg-gray-100'
+                ? 'border-blue-600 bg-blue-50 text-blue-700 font-bold'
+                : 'border-transparent bg-gray-50 text-gray-500 hover:bg-gray-100'
                 }`}
               onClick={() => setSection('Pièces')}
             >
@@ -282,7 +306,7 @@ export function AddProductModal({ isOpen, onClose, onAdd, onEdit, productToEdit 
                     <SelectValue placeholder="Choisir..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {INVENTORY_HIERARCHY.map(d => (
+                    {hierarchy.map(d => (
                       <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                     ))}
                   </SelectContent>
@@ -300,7 +324,7 @@ export function AddProductModal({ isOpen, onClose, onAdd, onEdit, productToEdit 
                     <SelectValue placeholder="Choisir..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {getBrands().map(b => (
+                    {getBrands().sort((a, b) => a.name.localeCompare(b.name)).map(b => (
                       <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                     ))}
                   </SelectContent>
@@ -315,7 +339,7 @@ export function AddProductModal({ isOpen, onClose, onAdd, onEdit, productToEdit 
                     <SelectValue placeholder="Sélectionner le modèle" />
                   </SelectTrigger>
                   <SelectContent className="max-h-[200px]">
-                    {getModels().map(m => (
+                    {getModels().sort((a, b) => b.localeCompare(a, undefined, { numeric: true })).map(m => (
                       <SelectItem key={m} value={m}>{m}</SelectItem>
                     ))}
                   </SelectContent>

@@ -14,3 +14,31 @@
 [2025-12-20T22:17:26.358Z] Create Request Body: {"client_id":3,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"notes":"uiytuyhioyu","warranty":90}
 [2025-12-20T22:50:21.868Z] Create Request Body: {"client_id":4,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"notes":"tregthgehbefnh","warranty":90}
 [2025-12-20T23:41:52.484Z] Create Request Body: {"client_id":4,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"notes":"eccran casse","warranty":90}
+[2025-12-21T00:49:29.722Z] Create Request Body: {"client_id":2,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"notes":"ftyhtgj","warranty":90}
+[2025-12-21T00:49:29.733Z] Controller Error: finalWarranty is not defined
+Stack: ReferenceError: finalWarranty is not defined
+    at Module.createRepair (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\src\services\repairService.ts:16:88)
+    at createRepair (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\src\controllers\repairController.ts:21:44)
+    at Layer.handleRequest (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\index.js:295:15
+    at processParams (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\index.js:582:12)
+    at next (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\index.js:291:5)
+[2025-12-21T00:49:40.317Z] Create Request Body: {"client_id":2,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"notes":"ftyhtgj","warranty":90}
+[2025-12-21T00:49:40.331Z] Controller Error: finalWarranty is not defined
+Stack: ReferenceError: finalWarranty is not defined
+    at Module.createRepair (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\src\services\repairService.ts:16:88)
+    at createRepair (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\src\controllers\repairController.ts:21:44)
+    at Layer.handleRequest (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\index.js:295:15
+    at processParams (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\index.js:582:12)
+    at next (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\index.js:291:5)
+[2025-12-21T00:52:46.541Z] Create Request Body: {"client_id":2,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"notes":"ftyhtgj","warranty":90}
+[2025-12-21T17:29:13.934Z] Create Request Body: {"client_id":1,"device_details":"API Test Device","issue_description":"Screen Broken","status":"reçue","cost_estimate":120,"piecesUtilisees":[{"id":"screen","name":"Screen","price":50,"quantity":1}]}

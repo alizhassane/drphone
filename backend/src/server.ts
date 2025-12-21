@@ -34,6 +34,7 @@ import saleRoutes from './routes/saleRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
 import phoneRoutes from './routes/phoneRoutes.js';
+import inventoryRoutes from './routes/inventoryRoutes.js';
 
 app.use('/api/clients', clientRoutes);
 app.use('/api/products', productRoutes);
@@ -42,6 +43,10 @@ app.use('/api/repairs', repairRoutes);
 app.use('/api/sales', saleRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/inventory', inventoryRoutes);
+
+import settingsRoutes from './routes/settingsRoutes.js';
+app.use('/api/settings', settingsRoutes);
 
 // Basic Route
 app.get('/', (req, res) => {

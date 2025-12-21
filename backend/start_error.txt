@@ -1,0 +1,10 @@
+C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\src\controllers\settingsController.ts:2
+import { Request, Response } from 'express';
+         ^
+SyntaxError: The requested module 'express' does not provide an export named 'Request'
+    at #asyncInstantiate (node:internal/modules/esm/module_job:302:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:405:5)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:660:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.12.0

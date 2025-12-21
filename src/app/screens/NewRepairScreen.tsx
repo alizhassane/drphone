@@ -24,8 +24,10 @@ import { AddClientModal } from '../components/modals/AddClientModal';
 import type { Screen, Customer, Repair, RepairStatus, Product } from '../types';
 import * as clientService from '../../services/clientService';
 import * as repairService from '../../services/repairService';
+import * as inventoryService from '../../services/inventoryService';
+import type { DeviceCategoryData } from '../../services/inventoryService';
 import { getProducts } from '../../services/productService';
-import { INVENTORY_HIERARCHY } from '../data/inventoryHierarchy';
+// import { INVENTORY_HIERARCHY } from '../data/inventoryHierarchy'; // REMOVED
 import { printRepairLabel } from '../utils/printRepairLabel';
 import { ConfirmationModal } from '../components/modals/ConfirmationModal';
 import { PrintOptionsModal } from '../components/modals/PrintOptionsModal';
@@ -48,6 +50,7 @@ export function NewRepairScreen({ onNavigate }: NewRepairScreenProps) {
   const [selectedCustomer, setSelectedCustomer] = useState('');
 
   // Hierarchical Selection State
+  const [hierarchy, setHierarchy] = useState<DeviceCategoryData[]>([]);
   const [selectedDeviceType, setSelectedDeviceType] = useState<string>('');
   const [selectedBrand, setSelectedBrand] = useState<string>('');
   const [selectedModel, setSelectedModel] = useState<string>('');
@@ -78,7 +81,17 @@ export function NewRepairScreen({ onNavigate }: NewRepairScreenProps) {
 
   useEffect(() => {
     loadCustomers();
+    loadHierarchy();
   }, []);
+
+  const loadHierarchy = async () => {
+    try {
+      const data = await inventoryService.getHierarchy();
+      setHierarchy(data);
+    } catch (error) {
+      console.error("Failed to load inventory hierarchy", error);
+    }
+  };
 
   // Auto-fetch parts when model changes
   useEffect(() => {
@@ -175,7 +188,7 @@ export function NewRepairScreen({ onNavigate }: NewRepairScreenProps) {
     }
 
     // Construct the phone model string from hierarchy
-    const brandName = INVENTORY_HIERARCHY
+    const brandName = hierarchy
       .find(t => t.id === selectedDeviceType)?.brands
       .find(b => b.id === selectedBrand)?.name || selectedBrand;
 
@@ -258,12 +271,12 @@ export function NewRepairScreen({ onNavigate }: NewRepairScreenProps) {
 
   // Helpers for Hierarchy
   const getBrands = () => {
-    const type = INVENTORY_HIERARCHY.find(t => t.id === selectedDeviceType);
+    const type = hierarchy.find(t => t.id === selectedDeviceType);
     return type ? type.brands : [];
   };
 
   const getModels = () => {
-    const type = INVENTORY_HIERARCHY.find(t => t.id === selectedDeviceType);
+    const type = hierarchy.find(t => t.id === selectedDeviceType);
     if (!type) return [];
     const brand = type.brands.find(b => b.id === selectedBrand);
     return brand ? brand.models : [];
@@ -372,7 +385,7 @@ export function NewRepairScreen({ onNavigate }: NewRepairScreenProps) {
                       <SelectValue placeholder="Choisir..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {INVENTORY_HIERARCHY.map(d => (
+                      {hierarchy.map(d => (
                         <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                       ))}
                     </SelectContent>
@@ -390,7 +403,7 @@ export function NewRepairScreen({ onNavigate }: NewRepairScreenProps) {
                       <SelectValue placeholder="Choisir..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {getBrands().map(b => (
+                      {getBrands().sort((a, b) => a.name.localeCompare(b.name)).map(b => (
                         <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                       ))}
                     </SelectContent>
@@ -405,7 +418,7 @@ export function NewRepairScreen({ onNavigate }: NewRepairScreenProps) {
                       <SelectValue placeholder="Sélectionner le modèle" />
                     </SelectTrigger>
                     <SelectContent className="max-h-[200px]">
-                      {getModels().map(m => (
+                      {getModels().sort((a, b) => b.localeCompare(a, undefined, { numeric: true })).map(m => (
                         <SelectItem key={m} value={m}>{m}</SelectItem>
                       ))}
                     </SelectContent>

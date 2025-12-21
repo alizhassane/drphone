@@ -12,7 +12,7 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import type { Screen, ShopSettings } from '../types';
+import type { Screen, ShopSettings, User } from '../types';
 
 interface SidebarProps {
   currentScreen: Screen;
@@ -20,9 +20,10 @@ interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
   shopSettings?: ShopSettings;
+  currentUser?: User | null;
 }
 
-export function Sidebar({ currentScreen, onNavigate, isOpen, onToggle, shopSettings }: SidebarProps) {
+export function Sidebar({ currentScreen, onNavigate, isOpen, onToggle, shopSettings, currentUser }: SidebarProps) {
   const menuItems = [
     { id: 'dashboard' as Screen, label: 'Tableau de bord', icon: LayoutDashboard },
     { id: 'pos' as Screen, label: 'Point de vente', icon: ShoppingCart },
@@ -33,7 +34,29 @@ export function Sidebar({ currentScreen, onNavigate, isOpen, onToggle, shopSetti
     { id: 'sales-history' as Screen, label: 'Historique ventes', icon: Receipt },
     { id: 'reports' as Screen, label: 'Rapports', icon: BarChart3 },
     { id: 'settings' as Screen, label: 'Paramètres', icon: Settings },
-  ];
+  ].filter(item => {
+    // Technician restrict: Only Repairs and Inventory
+    if (currentUser?.role === 'Technicien') {
+      return item.id === 'repairs' || item.id === 'inventory';
+    }
+
+    // Admin & Manager: Sales History
+    if (item.id === 'sales-history') {
+      return currentUser?.role === 'Admin' || currentUser?.role === 'Manager';
+    }
+
+    // Admin restrict: Reports & Settings
+    if (item.id === 'reports' || item.id === 'settings') {
+      return currentUser?.role === 'Admin';
+    }
+
+    // Vendeur restrict: Hide Dashboard
+    if (currentUser?.role === 'Vendeur' && item.id === 'dashboard') {
+      return false;
+    }
+
+    return true;
+  });
 
   return (
     <>
@@ -117,11 +140,13 @@ export function Sidebar({ currentScreen, onNavigate, isOpen, onToggle, shopSetti
         <div className="p-4 border-t border-gray-200">
           <div className="flex items-center gap-3 px-2">
             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-blue-600 text-sm font-semibold">AD</span>
+              <span className="text-blue-600 text-sm font-semibold">
+                {currentUser?.role === 'Admin' ? 'AD' : 'TM'}
+              </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-900 truncate">Administrateur</p>
-              <p className="text-xs text-gray-500 truncate">admin@drphone.ca</p>
+              <p className="text-sm text-gray-900 truncate">{currentUser?.username || 'Utilisateur'}</p>
+              <p className="text-xs text-gray-500 truncate">{currentUser?.email || currentUser?.role || 'Technicien'}</p>
             </div>
           </div>
         </div>

@@ -11,6 +11,9 @@ import type { DailyStat } from '../../services/statsService'; // Verify if we ex
 interface StatData {
   date: string;
   ventes: number;
+  sales_repair: number;
+  sales_phone: number;
+  sales_accessory: number;
   profits: number;
   reparations: number;
 }
@@ -27,11 +30,12 @@ export function ReportsScreen() {
   const loadStats = async () => {
     try {
       const data = await statsService.getDailyStats();
-      // Backend returns fields: date, ventes, profits, reparations
-      // Just ensure types match
       const formatted: StatData[] = data.map((d: any) => ({
         date: d.date,
         ventes: parseFloat(d.ventes),
+        sales_repair: parseFloat(d.sales_repair),
+        sales_phone: parseFloat(d.sales_phone),
+        sales_accessory: parseFloat(d.sales_accessory),
         profits: parseFloat(d.profits),
         reparations: parseInt(d.reparations)
       }));
@@ -49,6 +53,9 @@ export function ReportsScreen() {
     return dailyStats.slice(-7).map(stat => ({
       date: new Date(stat.date).toLocaleDateString('fr-CA', { day: '2-digit', month: 'short' }),
       ventes: stat.ventes,
+      sales_repair: stat.sales_repair,
+      sales_phone: stat.sales_phone,
+      sales_accessory: stat.sales_accessory,
       profits: stat.profits,
       reparations: stat.reparations
     }));
@@ -60,10 +67,13 @@ export function ReportsScreen() {
     dailyStats.forEach(stat => {
       const month = stat.date.substring(0, 7);
       if (!monthlyMap.has(month)) {
-        monthlyMap.set(month, { ventes: 0, profits: 0, reparations: 0 });
+        monthlyMap.set(month, { ventes: 0, sales_repair: 0, sales_phone: 0, sales_accessory: 0, profits: 0, reparations: 0 });
       }
       const data = monthlyMap.get(month);
       data.ventes += stat.ventes;
+      data.sales_repair += stat.sales_repair;
+      data.sales_phone += stat.sales_phone;
+      data.sales_accessory += stat.sales_accessory;
       data.profits += stat.profits;
       data.reparations += stat.reparations;
     });
@@ -71,6 +81,9 @@ export function ReportsScreen() {
     return Array.from(monthlyMap.entries()).map(([month, data]) => ({
       date: new Date(month).toLocaleDateString('fr-CA', { month: 'short', year: 'numeric' }),
       ventes: data.ventes,
+      sales_repair: data.sales_repair,
+      sales_phone: data.sales_phone,
+      sales_accessory: data.sales_accessory,
       profits: data.profits,
       reparations: data.reparations
     }));
@@ -196,9 +209,28 @@ export function ReportsScreen() {
                   formatter={(value: number) => `${value.toFixed(2)} $`}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="ventes" stroke="#3b82f6" strokeWidth={2} name="Ventes" />
+                <Line type="monotone" dataKey="ventes" stroke="#3b82f6" strokeWidth={2} name="Ventes Totales" />
                 <Line type="monotone" dataKey="profits" stroke="#10b981" strokeWidth={2} name="Profits" />
               </LineChart>
+            </ResponsiveContainer>
+          </Card>
+
+          <Card className="p-6">
+            <h3 className="font-semibold text-gray-900 mb-6">Répartition des Revenus (Avant Taxes)</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={dailyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="date" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                  formatter={(value: number) => `${value.toFixed(2)} $`}
+                />
+                <Legend />
+                <Bar dataKey="sales_repair" stackId="a" fill="#8b5cf6" name="Réparations" />
+                <Bar dataKey="sales_phone" stackId="a" fill="#ec4899" name="Téléphones" />
+                <Bar dataKey="sales_accessory" stackId="a" fill="#f59e0b" name="Accessoires" />
+              </BarChart>
             </ResponsiveContainer>
           </Card>
 
@@ -232,9 +264,28 @@ export function ReportsScreen() {
                   formatter={(value: number) => `${value.toFixed(2)} $`}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="ventes" stroke="#3b82f6" strokeWidth={2} name="Ventes" />
+                <Line type="monotone" dataKey="ventes" stroke="#3b82f6" strokeWidth={2} name="Ventes Totales" />
                 <Line type="monotone" dataKey="profits" stroke="#10b981" strokeWidth={2} name="Profits" />
               </LineChart>
+            </ResponsiveContainer>
+          </Card>
+
+          <Card className="p-6">
+            <h3 className="font-semibold text-gray-900 mb-6">Répartition des Revenus Mensuels</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="date" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                  formatter={(value: number) => `${value.toFixed(2)} $`}
+                />
+                <Legend />
+                <Bar dataKey="sales_repair" stackId="a" fill="#8b5cf6" name="Réparations" />
+                <Bar dataKey="sales_phone" stackId="a" fill="#ec4899" name="Téléphones" />
+                <Bar dataKey="sales_accessory" stackId="a" fill="#f59e0b" name="Accessoires" />
+              </BarChart>
             </ResponsiveContainer>
           </Card>
 

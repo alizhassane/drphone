@@ -6,16 +6,23 @@ import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'; // Import Tabs
 import { AddProductModal } from '../components/modals/AddProductModal';
-import type { Product } from '../types';
+import type { Product, User } from '../types';
 import * as productService from '../../services/productService';
 
-export function InventoryScreen() {
+interface InventoryScreenProps {
+  currentUser?: User | null;
+}
+
+export function InventoryScreen({ currentUser }: InventoryScreenProps) {
+  const isTechnician = currentUser?.role === 'Technicien';
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
-  const [currentSection, setCurrentSection] = useState<string>('Accessoires'); // Default section
+  const [currentSection, setCurrentSection] = useState<string>(
+    isTechnician ? 'Pièces' : 'Accessoires'
+  );
 
   useEffect(() => {
     loadProducts();
@@ -98,17 +105,19 @@ export function InventoryScreen() {
           <p className="text-gray-500">Gérez vos produits et pièces de rechange</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => document.getElementById('search-input')?.focus()}>
             <Barcode className="w-4 h-4" />
             Scanner code-barres
           </Button>
-          <Button
-            className="gap-2 bg-blue-600 hover:bg-blue-700"
-            onClick={() => setIsAddModalOpen(true)}
-          >
-            <Plus className="w-4 h-4" />
-            Ajouter un produit
-          </Button>
+          {!isTechnician && (
+            <Button
+              className="gap-2 bg-blue-600 hover:bg-blue-700"
+              onClick={() => setIsAddModalOpen(true)}
+            >
+              <Plus className="w-4 h-4" />
+              Ajouter un produit
+            </Button>
+          )}
         </div>
       </div>
 
@@ -116,7 +125,7 @@ export function InventoryScreen() {
         <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
           <Tabs value={currentSection} onValueChange={setCurrentSection} className="w-[400px]">
             <TabsList>
-              <TabsTrigger value="Accessoires">Accessoires</TabsTrigger>
+              {!isTechnician && <TabsTrigger value="Accessoires">Accessoires</TabsTrigger>}
               <TabsTrigger value="Pièces">Pièces de rechange</TabsTrigger>
             </TabsList>
           </Tabs>
@@ -124,6 +133,7 @@ export function InventoryScreen() {
           <div className="relative w-full md:w-72">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
+              id="search-input"
               type="text"
               placeholder="Rechercher..."
               value={searchTerm}

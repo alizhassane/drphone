@@ -42,3 +42,5 @@ Stack: ReferenceError: finalWarranty is not defined
     at next (C:\Users\hassa\Desktop\Dr.Phone Manager UI Design (1)\backend\node_modules\router\index.js:291:5)
 [2025-12-21T00:52:46.541Z] Create Request Body: {"client_id":2,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"notes":"ftyhtgj","warranty":90}
 [2025-12-21T17:29:13.934Z] Create Request Body: {"client_id":1,"device_details":"API Test Device","issue_description":"Screen Broken","status":"reçue","cost_estimate":120,"piecesUtilisees":[{"id":"screen","name":"Screen","price":50,"quantity":1}]}
+[2025-12-21T17:42:40.941Z] Create Request Body: {"client_id":1,"device_details":"Transaction Test Device","issue_description":"Payment Test","status":"reçue","cost_estimate":80,"piecesUtilisees":[]}
+[2025-12-21T17:47:55.378Z] Create Request Body: {"client_id":5,"device_details":"Apple iPhone 15 Pro Max","issue_description":"screen - ","status":"reçue","cost_estimate":100,"parts":["20"],"notes":"fhnmfh","warranty":90}

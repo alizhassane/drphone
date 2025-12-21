@@ -162,8 +162,15 @@ export function NewRepairScreen({ onNavigate }: NewRepairScreenProps) {
   };
 
   const handleRemovePart = (index: number) => {
-    // Note: Removing a part does NOT automatically reduce price because we don't know if the user manually adjusted it.
+    const partToRemove = selectedParts[index];
     setSelectedParts(selectedParts.filter((_, i) => i !== index));
+
+    // Subtract price
+    if (partToRemove.price > 0) {
+      const currentPrice = parseFloat(price) || 0;
+      const newPrice = Math.max(0, currentPrice - partToRemove.price);
+      setPrice(newPrice.toFixed(2));
+    }
   };
 
   const handleCreateClient = async (newClient: Omit<Customer, 'id' | 'dateCreation'>) => {

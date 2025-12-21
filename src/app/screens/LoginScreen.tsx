@@ -3,19 +3,29 @@ import { Smartphone } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import * as userService from '../../services/userService';
+
+import type { User } from '../types';
 
 interface LoginScreenProps {
-  onLogin: () => void;
+  onLogin: (user: User) => void;
 }
 
 export function LoginScreen({ onLogin }: LoginScreenProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [language, setLanguage] = useState<'fr' | 'en'>('fr');
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin();
+    setError('');
+    try {
+      const user = await userService.login(username, password);
+      onLogin(user); // Proceed if successful 
+    } catch (err) {
+      setError("Nom d'utilisateur ou mot de passe incorrect");
+    }
   };
 
   return (
@@ -35,25 +45,29 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
           <div className="flex justify-center gap-2 mb-6">
             <button
               onClick={() => setLanguage('fr')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                language === 'fr'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 rounded-lg transition-colors ${language === 'fr'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
             >
               FR
             </button>
             <button
               onClick={() => setLanguage('en')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                language === 'en'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 rounded-lg transition-colors ${language === 'en'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
             >
               EN
             </button>
           </div>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm border border-red-200 text-center">
+              {error}
+            </div>
+          )}
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-4">

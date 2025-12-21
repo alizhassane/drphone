@@ -153,14 +153,11 @@ export function DashboardScreen() {
               <tbody>
                 {stats.recentRepairs.map((repair: any) => (
                   <tr key={repair.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm">{repair.numeroTicket || 'N/A'}</td>
+                    <td className="py-3 px-4 text-sm font-medium">#{repair.id}</td>
                     <td className="py-3 px-4 text-sm">{repair.client_name || 'Inconnu'}</td>
-                    {/* Note: repair table might not have phone directly if it's on client, check join */}
-                    <td className="py-3 px-4 text-sm">{repair.modelePhone}</td>
-                    <td className="py-3 px-4">{getStatusBadge(repair.status || repair.statut)}</td>
-                    <td className="py-3 px-4 text-sm text-right">{Number(repair.cost_estimate || repair.prix || 0).toFixed(2)} $</td>
-                    {/* Backend returns snake_case or mixed depending on query. Service uses `r.*`. Repairs table: `cost_estimate`. Frontend type: `prix`. */}
-                    {/* The backend query `SELECT r.*` returns `cost_estimate`. */}
+                    <td className="py-3 px-4 text-sm">{repair.device_details || 'N/A'}</td>
+                    <td className="py-3 px-4">{getStatusBadge(repair.status)}</td>
+                    <td className="py-3 px-4 text-sm text-right">{Number(repair.cost_estimate || 0).toFixed(2)} $</td>
                   </tr>
                 ))}
               </tbody>
@@ -174,7 +171,7 @@ export function DashboardScreen() {
             <AlertTriangle className="w-5 h-5 text-orange-600" />
             <h3 className="font-bold text-gray-900">Alertes de stock faible</h3>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
             {stats.lowStockItems.length === 0 ? (
               <p className="text-sm text-gray-500">Aucune alerte de stock</p>
             ) : (

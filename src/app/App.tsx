@@ -14,10 +14,11 @@ import PhonesScreen from './screens/PhonesScreen';
 import BuyPhoneScreen from './screens/BuyPhoneScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { mockShopSettings } from './mockData';
-import type { Screen, Repair, TransactionData, ShopSettings } from './types';
+import type { Screen, Repair, TransactionData, ShopSettings, User } from './types';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentScreen, setCurrentScreen] = useState<Screen>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [repairForPayment, setRepairForPayment] = useState<Repair | null>(null);
@@ -29,7 +30,8 @@ export default function App() {
     return saved ? JSON.parse(saved) : mockShopSettings;
   });
 
-  const handleLogin = () => {
+  const handleLogin = (user: User) => {
+    setCurrentUser(user);
     setIsLoggedIn(true);
   };
 
@@ -72,6 +74,7 @@ export default function App() {
         isOpen={sidebarOpen}
         onToggle={toggleSidebar}
         shopSettings={shopSettings}
+        currentUser={currentUser}
       />
 
       <main className="flex-1 overflow-y-auto">
@@ -86,7 +89,7 @@ export default function App() {
           />
         )}
         {currentScreen === 'inventory' && (
-          <InventoryScreen />
+          <InventoryScreen currentUser={currentUser} />
         )}
         {currentScreen === 'customers' && (
           <CustomersScreen />

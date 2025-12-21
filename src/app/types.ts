@@ -115,6 +115,8 @@ export interface POSTransaction {
   methodePaiement: PaymentMethod;
   clientId?: string;
   clientNom?: string;
+  clientEmail?: string;
+  clientPhone?: string;
   taxesIncluses: boolean;
   statut: PaymentStatus;
 }
@@ -153,9 +155,11 @@ export type Screen =
 
 export interface User {
   id: string;
-  nom: string;
-  email: string;
-  role: 'Admin' | 'Technicien' | 'Vendeur';
+  username: string; // NEW
+  password?: string; // NEW
+  name: string;
+  email?: string;
+  role: 'Admin' | 'Manager' | 'Technicien' | 'Vendeur';
   statut: 'Actif' | 'Inactif';
 }
 

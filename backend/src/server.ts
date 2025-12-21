@@ -35,6 +35,7 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
 import phoneRoutes from './routes/phoneRoutes.js';
 import inventoryRoutes from './routes/inventoryRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 app.use('/api/clients', clientRoutes);
 app.use('/api/products', productRoutes);
@@ -44,6 +45,7 @@ app.use('/api/sales', saleRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/users', userRoutes);
 
 import settingsRoutes from './routes/settingsRoutes.js';
 app.use('/api/settings', settingsRoutes);

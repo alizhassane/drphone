@@ -239,9 +239,9 @@ export function POSScreen({ shopSettings, onNavigate, repairForPayment }: POSScr
   };
 
   const subtotal = cart.reduce((sum, item) => sum + (item.prix * item.quantite), 0);
-  const tps = taxIncluded ? (subtotal * shopSettings.tps / (100 + shopSettings.tps + shopSettings.tvq)) : (subtotal * shopSettings.tps / 100);
-  const tvq = taxIncluded ? (subtotal * shopSettings.tvq / (100 + shopSettings.tps + shopSettings.tvq)) : (subtotal * shopSettings.tvq / 100);
-  const total = taxIncluded ? subtotal : (subtotal + tps + tvq);
+  const tps = subtotal * (shopSettings.tps / 100);
+  const tvq = subtotal * (shopSettings.tvq / 100);
+  const total = subtotal + tps + tvq;
 
   const handleCheckout = () => {
     const transactionData: TransactionData = {
@@ -258,8 +258,46 @@ export function POSScreen({ shopSettings, onNavigate, repairForPayment }: POSScr
     onNavigate('payment', transactionData);
   };
 
+  const handleToggleTaxMode = () => {
+    const newTaxIncluded = !taxIncluded;
+    const totalTaxRate = (shopSettings.tps + shopSettings.tvq) / 100;
+    const multiplier = 1 + totalTaxRate;
+
+    setCart(cart.map(item => {
+      // Avoid modifying repair prices directly if logic forbids it, but user asked for "every article".
+      // Repairs usually fixed price? 
+      // Existing logic (updateQuantity) prevents quantity change but not price change via edit.
+      // So we should update price here too.
+
+      let newPrice;
+      let newOriginalPrice = item.originalPrice;
+
+      if (newTaxIncluded) {
+        // Excl -> Incl : Remove Tax component to show Pre-Tax Price that totals to original amount
+        newPrice = item.prix / multiplier;
+        if (newOriginalPrice) newOriginalPrice = newOriginalPrice / multiplier;
+      } else {
+        // Incl -> Excl : Restore original price (Add back tax component)
+        newPrice = item.prix * multiplier;
+        if (newOriginalPrice) newOriginalPrice = newOriginalPrice * multiplier;
+      }
+
+      // Rounding to 2 decimal places to avoid visual weirdness
+      newPrice = Math.round(newPrice * 100) / 100;
+      if (newOriginalPrice) newOriginalPrice = Math.round(newOriginalPrice * 100) / 100;
+
+      return {
+        ...item,
+        prix: newPrice,
+        originalPrice: newOriginalPrice
+      };
+    }));
+
+    setTaxIncluded(newTaxIncluded);
+  };
+
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full">
       {/* Header Section - Fixed */}
       <div className="flex-shrink-0 p-4 md:p-6 border-b border-gray-200 bg-white">
         <div className="mb-4">
@@ -381,6 +419,7 @@ export function POSScreen({ shopSettings, onNavigate, repairForPayment }: POSScr
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <Input
+                    id="pos-search-input"
                     type="text"
                     placeholder="Rechercher par nom, code-barres ou IMEI..."
                     value={searchTerm}
@@ -388,7 +427,7 @@ export function POSScreen({ shopSettings, onNavigate, repairForPayment }: POSScr
                     className="pl-10"
                   />
                 </div>
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" className="gap-2" onClick={() => document.getElementById('pos-search-input')?.focus()}>
                   <Barcode className="w-4 h-4" />
                   Scanner
                 </Button>
@@ -422,7 +461,7 @@ export function POSScreen({ shopSettings, onNavigate, repairForPayment }: POSScr
             </div>
 
             {/* Product Grid - Scrollable */}
-            <div className="flex-1 p-4 md:p-6">
+            <div className="flex-1 p-4 md:p-6 overflow-y-auto">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
 
                 {/* Show Phones */}
@@ -478,7 +517,7 @@ export function POSScreen({ shopSettings, onNavigate, repairForPayment }: POSScr
 
         {/* Cart Section */}
         <div className="flex flex-col min-h-0">
-          <Card className="flex-1 flex flex-col">
+          <Card className="flex flex-col max-h-full">
             {/* Cart Header - Fixed */}
             <div className="flex-shrink-0 p-4 md:p-6 border-b border-gray-200 bg-blue-600">
               <div className="flex items-center gap-2 text-white">
@@ -488,7 +527,7 @@ export function POSScreen({ shopSettings, onNavigate, repairForPayment }: POSScr
             </div>
 
             {/* Cart Items - Scrollable */}
-            <div className="flex-1 p-4">
+            <div className="flex-1 p-4 overflow-y-auto">
               {cart.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
                   <ShoppingCart className="w-12 h-12 mb-2" />
@@ -604,7 +643,7 @@ export function POSScreen({ shopSettings, onNavigate, repairForPayment }: POSScr
               <div className="flex items-center justify-between mb-4 p-3 bg-white rounded-lg">
                 <span className="text-sm text-gray-700">Prix taxes incluses</span>
                 <button
-                  onClick={() => setTaxIncluded(!taxIncluded)}
+                  onClick={handleToggleTaxMode}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${taxIncluded ? 'bg-blue-600' : 'bg-gray-300'
                     }`}
                 >

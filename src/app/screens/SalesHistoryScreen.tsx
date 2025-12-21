@@ -7,6 +7,9 @@ import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import type { POSTransaction, PaymentMethod, CartItem } from '../types';
 import * as saleService from '../../services/saleService';
+import * as settingsService from '../../services/settingsService';
+import { generateInvoiceHtml } from '../../utils/invoiceGenerator';
+import type { ShopSettings } from '../types';
 
 interface SalesHistoryScreenProps {
   // No props needed now
@@ -39,14 +42,16 @@ export function SalesHistoryScreen() {
           categorie: 'Vente', // Default category
           type: item.is_manual ? 'manual' : 'product'
         })),
-        sousTotal: parseFloat(sale.total_amount), // This might be total before tax or after? Schema says total_amount. Let's assume it's subtotal if we have tax fields.
-        // Wait, schema has total_amount, tax_tps, tax_tvq, final_total.
+        sousTotal: parseFloat(sale.total_amount),
         tps: parseFloat(sale.tax_tps),
         tvq: parseFloat(sale.tax_tvq),
         total: parseFloat(sale.final_total),
         methodePaiement: sale.payment_method as PaymentMethod,
         taxesIncluses: false, // Default
-        statut: sale.status === 'Completed' ? 'payé' : 'non_payé'
+        statut: sale.status === 'Completed' ? 'payé' : 'non_payé',
+        clientNom: sale.clientNom, // From updated service
+        clientEmail: sale.clientEmail,
+        clientPhone: sale.clientPhone
       }));
       setTransactions(mappedTransactions);
     } catch (error) {
@@ -56,14 +61,11 @@ export function SalesHistoryScreen() {
     }
   };
 
+  /* FILTER LOGIC START */
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch =
       transaction.numeroVente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (transaction.clientNom?.toLowerCase().includes(searchTerm.toLowerCase())); // Client nom usually not in sale table unless joined. Schema doesn't strictly link sale to client yet...
-    // Wait, Sales table doesn't have client_id in schema I saw earlier? 
-    // Schema: sale(id, total_amount, ...). No client_id?
-    // Ah, I missed adding client_id to sales table in schema?
-    // Let's assume no client info for now or check schema.
+      (transaction.clientNom?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
 
     const matchesPayment = paymentFilter === 'all' || transaction.methodePaiement === paymentFilter;
 
@@ -87,6 +89,45 @@ export function SalesHistoryScreen() {
 
     return matchesSearch && matchesPayment && matchesDate;
   });
+
+  const handlePrintInvoice = async (transaction: POSTransaction) => {
+    try {
+      const settings = await settingsService.getSettings();
+
+      let customerObj: any = undefined;
+      if (transaction.clientNom) {
+        customerObj = {
+          nom: transaction.clientNom,
+          email: transaction.clientEmail || '',
+          telephone: transaction.clientPhone || ''
+        };
+      }
+
+      const html = generateInvoiceHtml({
+        shopSettings: settings as ShopSettings,
+        items: transaction.items,
+        totals: {
+          subtotal: transaction.sousTotal,
+          tps: transaction.tps,
+          tvq: transaction.tvq,
+          total: transaction.total
+        },
+        paymentMethod: transaction.methodePaiement,
+        customer: customerObj,
+        transactionNumber: transaction.numeroVente,
+        date: transaction.date
+      });
+
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(html);
+        printWindow.document.close();
+      }
+    } catch (error) {
+      console.error('Failed to print invoice', error);
+      alert('Erreur lors de l\'impression');
+    }
+  };
 
   const getPaymentMethodBadge = (method: PaymentMethod) => {
     const methodConfig = {
@@ -218,9 +259,14 @@ export function SalesHistoryScreen() {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center justify-center">
-                      <Button variant="ghost" size="sm" className="h-8 px-3 gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-3 gap-1"
+                        onClick={() => handlePrintInvoice(transaction)}
+                      >
                         <Eye className="w-4 h-4" />
-                        Voir
+                        Facture
                       </Button>
                     </div>
                   </td>

@@ -111,6 +111,8 @@ export function AddProductModal({ isOpen, onClose, onAdd, onEdit, productToEdit 
     setSelectedModel('');
     setSelectedPart('');
     setSelectedQuality('');
+    setExistingId(null);
+    setExistingQuantity(0);
     setFormData({
       nom: '',
       categorie: ACCESSORY_CATEGORIES[0],
@@ -124,6 +126,9 @@ export function AddProductModal({ isOpen, onClose, onAdd, onEdit, productToEdit 
     setIsExisting(false);
   };
 
+  const [existingId, setExistingId] = useState<string | null>(null);
+  const [existingQuantity, setExistingQuantity] = useState<number>(0);
+
   const handleBarcodeBlur = async () => {
     if (productToEdit || !formData.codeBarres.trim()) return;
 
@@ -132,6 +137,8 @@ export function AddProductModal({ isOpen, onClose, onAdd, onEdit, productToEdit 
       const existingProduct = await getProductBySku(formData.codeBarres.trim());
       if (existingProduct) {
         setIsExisting(true);
+        setExistingId(existingProduct.id);
+        setExistingQuantity(existingProduct.quantite);
         setSection(existingProduct.section || 'Accessoires');
         setFormData(prev => ({
           ...prev,
@@ -145,6 +152,8 @@ export function AddProductModal({ isOpen, onClose, onAdd, onEdit, productToEdit 
         setErrors({});
       } else {
         setIsExisting(false);
+        setExistingId(null);
+        setExistingQuantity(0);
       }
     } catch (err) {
       console.error("Error checking SKU", err);
@@ -176,6 +185,11 @@ export function AddProductModal({ isOpen, onClose, onAdd, onEdit, productToEdit 
       return;
     }
 
+    const inputQuantity = parseInt(formData.quantite);
+
+    // If existing, we add to current stock
+    const finalQuantity = isExisting ? existingQuantity + inputQuantity : inputQuantity;
+
     const productData: Omit<Product, 'id'> = {
       nom: formData.nom.trim(),
       categorie: formData.categorie,
@@ -184,12 +198,15 @@ export function AddProductModal({ isOpen, onClose, onAdd, onEdit, productToEdit 
       codeBarres: formData.codeBarres.trim(),
       prixAchat: parseFloat(formData.prixAchat),
       prixVente: parseFloat(formData.prixVente),
-      quantite: parseInt(formData.quantite),
+      quantite: finalQuantity,
       alerteStock: parseInt(formData.alerteStock || '5')
     };
 
     if (productToEdit && onEdit) {
       onEdit(productToEdit.id, productData);
+    } else if (isExisting && existingId && onEdit) {
+      // Use onEdit to update the existing product with new stock
+      onEdit(existingId, productData);
     } else {
       onAdd(productData);
     }

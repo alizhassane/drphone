@@ -53,7 +53,7 @@ export const getDashboardStats = async () => {
 
     // 7. Low Stock Items (List)
     const lowStockItemsRes = await query(
-        `SELECT * FROM products WHERE stock_quantity <= min_stock_alert LIMIT 5`
+        `SELECT * FROM products WHERE stock_quantity <= min_stock_alert ORDER BY stock_quantity ASC LIMIT 50`
     );
 
     // 8. Phones in Stock
@@ -90,6 +90,9 @@ export const getDailyStats = async () => {
             SELECT 
                 date(s.created_at) as day,
                 SUM(s.final_total) as sales,
+                SUM(CASE WHEN si.repair_id IS NOT NULL THEN si.unit_price * si.quantity ELSE 0 END) as sales_repair,
+                SUM(CASE WHEN si.phone_id IS NOT NULL THEN si.unit_price * si.quantity ELSE 0 END) as sales_phone,
+                SUM(CASE WHEN si.product_id IS NOT NULL THEN si.unit_price * si.quantity ELSE 0 END) as sales_accessory,
                 SUM(
                     CASE 
                         WHEN si.product_id IS NOT NULL THEN (si.unit_price - COALESCE(p.purchase_price, 0)) * si.quantity
@@ -115,6 +118,9 @@ export const getDailyStats = async () => {
         SELECT 
             d.date,
             COALESCE(s.sales, 0) as ventes,
+            COALESCE(s.sales_repair, 0) as sales_repair,
+            COALESCE(s.sales_phone, 0) as sales_phone,
+            COALESCE(s.sales_accessory, 0) as sales_accessory,
             COALESCE(s.profits, 0) as profits,
             COALESCE(r.repair_count, 0) as reparations
         FROM dates d

@@ -36,30 +36,28 @@ export function ImprovedPaymentScreen({ onNavigate, shopSettings, transaction }:
     }
   }, [transaction, onNavigate]);
 
-  // Calculate taxes dynamically based on toggle and settings
-  const calculateTotal = () => {
-    const subtotal = items.reduce((sum, item) => sum + (item.prix * item.quantite), 0);
+  // Calculate adjusted items based on tax selection
+  // "Tax Included" means we treat the source price as Inclusive, so we reduce it to Exclusive for display/calc
+  const calculatedItems = taxIncluded
+    ? items.map((item: any) => ({
+      ...item,
+      prix: item.prix / (1 + (shopSettings.tps + shopSettings.tvq) / 100),
+      originalPrice: item.originalPrice ? item.originalPrice / (1 + (shopSettings.tps + shopSettings.tvq) / 100) : undefined
+    }))
+    : items;
 
-    if (taxIncluded) {
-      const total = subtotal;
-      const tpsAmount = (total / (1 + (shopSettings.tps + shopSettings.tvq) / 100)) * (shopSettings.tps / 100);
-      const tvqAmount = (total / (1 + (shopSettings.tps + shopSettings.tvq) / 100)) * (shopSettings.tvq / 100);
-      return {
-        subtotal: total - tpsAmount - tvqAmount,
-        tps: tpsAmount,
-        tvq: tvqAmount,
-        total: total
-      };
-    } else {
-      const tpsAmount = subtotal * (shopSettings.tps / 100);
-      const tvqAmount = subtotal * (shopSettings.tvq / 100);
-      return {
-        subtotal: subtotal,
-        tps: tpsAmount,
-        tvq: tvqAmount,
-        total: subtotal + tpsAmount + tvqAmount
-      };
-    }
+  // Calculate taxes
+  const calculateTotal = () => {
+    const subtotal = calculatedItems.reduce((sum: number, item: any) => sum + (item.prix * item.quantite), 0);
+    const tpsAmount = subtotal * (shopSettings.tps / 100);
+    const tvqAmount = subtotal * (shopSettings.tvq / 100);
+
+    return {
+      subtotal: subtotal,
+      tps: tpsAmount,
+      tvq: tvqAmount,
+      total: subtotal + tpsAmount + tvqAmount
+    };
   };
 
   const totals = calculateTotal();
@@ -82,30 +80,23 @@ export function ImprovedPaymentScreen({ onNavigate, shopSettings, transaction }:
         tax_tvq: totals.tvq,
         final_total: totals.total,
         payment_method: paymentMethod,
-        items: items.map(item => ({
+        items: calculatedItems.map((item: any) => ({
           product_id: item.type === 'product' && !item.productId.startsWith('manual') && !item.productId.startsWith('repair') ? parseInt(item.productId) : undefined,
           phone_id: item.type === 'phone' ? item.productId : undefined,
+          repair_id: item.type === 'repair' && item.repairId ? parseInt(item.repairId) : undefined,
           quantity: item.quantite,
           unit_price: item.prix,
           is_manual: item.type === 'manual' || item.type === 'repair' || item.productId.startsWith('manual'),
           manual_name: item.type === 'manual' || item.type === 'repair' ? item.nom : undefined
         })),
+        client_id: customer && customer.id ? parseInt(customer.id) : undefined,
       };
 
       const result = await saleService.createSale(saleInput);
       setCompletedSale(result);
 
-      // AUTOMATION: Update Repair Status if linked
-      if (linkedRepair) {
-        await repairService.updateRepairStatus(Number(linkedRepair.id), 'payée_collectée');
-      } else {
-        // Also check if any item in the cart is a repair
-        for (const item of items) {
-          if (item.type === 'repair' && item.repairId) {
-            await repairService.updateRepairStatus(Number(item.repairId), 'payée_collectée');
-          }
-        }
-      }
+      // Backend now handles repair status updates automatically via transaction
+      // AUTOMATION: Update Repair Status if linked - REMOVED (Handled by backend)
 
       setShowConfirmation(true);
     } catch (error) {
@@ -123,7 +114,7 @@ export function ImprovedPaymentScreen({ onNavigate, shopSettings, transaction }:
 
     const invoiceHtml = generateInvoiceHtml({
       shopSettings,
-      items,
+      items: calculatedItems,
       totals: {
         subtotal: totals.subtotal,
         tps: totals.tps,
@@ -247,7 +238,7 @@ export function ImprovedPaymentScreen({ onNavigate, shopSettings, transaction }:
                     </tr>
                   </thead>
                   <tbody>
-                    {items.map((item, index) => (
+                    {calculatedItems.map((item: any, index: number) => (
                       <tr key={index}>
                         <td className="py-2">
                           <p className="text-gray-900">{item.nom}</p>

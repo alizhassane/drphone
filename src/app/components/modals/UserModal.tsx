@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Save, User as UserIcon, Mail } from 'lucide-react';
+import { X, Save, User as UserIcon, Mail, Lock, Shield } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -9,42 +9,63 @@ import type { User } from '../../types';
 interface UserModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (user: Omit<User, 'id'>) => void;
+    onSave: (user: Omit<User, 'id'>) => Promise<void>; // Make async to handle errors
     userToEdit?: User | null;
 }
 
 export function UserModal({ isOpen, onClose, onSave, userToEdit }: UserModalProps) {
     const [formData, setFormData] = useState({
-        nom: '',
+        username: '',
+        password: '',
+        // nom removed
         email: '',
         role: 'Technicien' as User['role'],
         statut: 'Actif' as User['statut']
     });
+    const [error, setError] = useState('');
 
     useEffect(() => {
         if (userToEdit) {
             setFormData({
-                nom: userToEdit.nom,
-                email: userToEdit.email,
+                username: userToEdit.username || '',
+                password: '', // Don't show existing password
+                // nom removed
+                email: userToEdit.email || '',
                 role: userToEdit.role,
                 statut: userToEdit.statut
             });
         } else {
             setFormData({
-                nom: '',
+                username: '',
+                password: '',
+                // nom removed
                 email: '',
                 role: 'Technicien',
                 statut: 'Actif'
             });
         }
+        setError('');
     }, [userToEdit, isOpen]);
 
     if (!isOpen) return null;
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(formData);
-        onClose();
+        setError('');
+        try {
+            // Map name to username automatically as "Nom complet" field is removed
+            await onSave({ ...formData, name: formData.username });
+            onClose();
+        } catch (err: any) {
+            console.error(err);
+            if (err.message && err.message.includes('Username already taken')) {
+                setError('Ce nom d\'utilisateur est déjà pris.');
+            } else if (err.response && err.response.data && err.response.data.error === 'Username already taken') {
+                setError('Ce nom d\'utilisateur est déjà pris.');
+            } else {
+                setError('Erreur lors de la sauvegarde.');
+            }
+        }
     };
 
     return (
@@ -75,21 +96,45 @@ export function UserModal({ isOpen, onClose, onSave, userToEdit }: UserModalProp
                     )}
                 </h2>
 
+                {error && (
+                    <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm border border-red-200">
+                        {error}
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="nom">Nom complet</Label>
+                        <Label htmlFor="username">Nom d'utilisateur (Unique)</Label>
                         <div className="relative">
-                            <UserIcon className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                            <Shield className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                             <Input
-                                id="nom"
+                                id="username"
                                 required
-                                value={formData.nom}
-                                onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
+                                value={formData.username}
+                                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                                 className="pl-9"
-                                placeholder="Ex: Jean Tremblay"
+                                placeholder="Ex: jean.tremblay"
                             />
                         </div>
                     </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="password">Mot de passe {userToEdit && '(Laisser vide pour ne pas changer)'}</Label>
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                            <Input
+                                id="password"
+                                type="password"
+                                required={!userToEdit} // Required only for new users
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                className="pl-9"
+                                placeholder={userToEdit ? "********" : "Créer un mot de passe"}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Nom Complet field removed as per request */}
 
                     <div className="space-y-2">
                         <Label htmlFor="email">Adresse courriel</Label>
@@ -98,11 +143,10 @@ export function UserModal({ isOpen, onClose, onSave, userToEdit }: UserModalProp
                             <Input
                                 id="email"
                                 type="email"
-                                required
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                 className="pl-9"
-                                placeholder="jean@drphone.ca"
+                                placeholder="jean@drphone.ca (Optionnel)"
                             />
                         </div>
                     </div>
@@ -119,6 +163,7 @@ export function UserModal({ isOpen, onClose, onSave, userToEdit }: UserModalProp
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="Admin">Admin</SelectItem>
+                                    <SelectItem value="Manager">Manager</SelectItem>
                                     <SelectItem value="Technicien">Technicien</SelectItem>
                                     <SelectItem value="Vendeur">Vendeur</SelectItem>
                                 </SelectContent>

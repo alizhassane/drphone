@@ -12,6 +12,7 @@ import type { ShopSettings, User } from '../types';
 import * as inventoryService from '../../services/inventoryService';
 import { DeviceCategoryData, BrandData } from '../../services/inventoryService';
 import * as settingsService from '../../services/settingsService';
+import * as userService from '../../services/userService';
 
 interface SettingsScreenProps {
   shopSettings: ShopSettings;
@@ -45,17 +46,23 @@ export function SettingsScreen({ shopSettings, onSave }: SettingsScreenProps) {
   };
 
   // User Management State
-  const [users, setUsers] = useState<User[]>(() => {
-    const saved = localStorage.getItem('users');
-    return saved ? JSON.parse(saved) : mockUsers;
-  });
+  const [users, setUsers] = useState<User[]>([]);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
 
-  // Persist users when changed
+  // Load users on mount
   useEffect(() => {
-    localStorage.setItem('users', JSON.stringify(users));
-  }, [users]);
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      const data = await userService.getUsers();
+      setUsers(data);
+    } catch (e) {
+      console.error("Failed to load users", e);
+    }
+  };
 
   const handleSave = async () => {
     onSave(settings);
@@ -68,28 +75,26 @@ export function SettingsScreen({ shopSettings, onSave }: SettingsScreenProps) {
     }
   };
 
-  const handleAddUser = (userData: Omit<User, 'id'>) => {
-    const newUser: User = {
-      ...userData,
-      id: Date.now().toString()
-    };
-    setUsers([...users, newUser]);
+  const handleAddUser = async (userData: Omit<User, 'id'>) => {
+    await userService.createUser(userData);
+    await loadUsers();
   };
 
-  const handleEditUser = (userData: Omit<User, 'id'>) => {
+  const handleEditUser = async (userData: Omit<User, 'id'>) => {
     if (!userToEdit) return;
-    const updatedUsers = users.map(u =>
-      u.id === userToEdit.id ? { ...userData, id: u.id } : u
-    );
-    setUsers(updatedUsers);
+    await userService.updateUser({ ...userData, id: userToEdit.id });
+    await loadUsers();
     setUserToEdit(null);
   };
 
-
-
-  const handleDeleteUser = (id: string) => {
+  const handleDeleteUser = async (id: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
-      setUsers(users.filter(u => u.id !== id));
+      try {
+        await userService.deleteUser(id);
+        await loadUsers();
+      } catch (e) {
+        alert('Erreur lors de la suppression');
+      }
     }
   };
 
@@ -435,6 +440,7 @@ export function SettingsScreen({ shopSettings, onSave }: SettingsScreenProps) {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 text-sm text-gray-500">Nom d'utilisateur</th>
                     <th className="text-left py-3 px-4 text-sm text-gray-500">Nom</th>
                     <th className="text-left py-3 px-4 text-sm text-gray-500">Courriel</th>
                     <th className="text-left py-3 px-4 text-sm text-gray-500">Rôle</th>
@@ -445,6 +451,7 @@ export function SettingsScreen({ shopSettings, onSave }: SettingsScreenProps) {
                 <tbody>
                   {users.map((user) => (
                     <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4 text-sm text-gray-900 font-medium">{user.username}</td>
                       <td className="py-3 px-4 text-sm text-gray-900">{user.nom}</td>
                       <td className="py-3 px-4 text-sm text-gray-600">{user.email}</td>
                       <td className="py-3 px-4 text-sm text-gray-600">
